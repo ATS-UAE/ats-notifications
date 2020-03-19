@@ -1,6 +1,6 @@
 # Setup
 
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash
+`npm install -g https://github.com/ramilamparo/ats-notifications`
 
 # Commands
 
