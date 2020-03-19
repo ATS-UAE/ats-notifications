@@ -6,8 +6,9 @@
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"start": "nodemon",
 		"build": "tsc",
+		"build-prod": "tsc --sourcemap false",
 		"clean": "rm -rf ./build",
-		"postinstall": "npm run build",
+		"typecheck": "tsc --noEmit true",
 		"postversion": "git push && git push --tags"
 	},
 	"author": "",
