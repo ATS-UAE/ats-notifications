@@ -1,8 +1,0 @@
-{
-	"mail": {
-		"host": "mail.google.com",
-		"user": "support@gmail.com",
-		"pass": "mypassword12345",
-		"port": 465
-	}
-}
