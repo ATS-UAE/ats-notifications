@@ -55,7 +55,8 @@ if (args.token && args["fleet-id"]) {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    if (!(args.subject && args.recipient)) return [3 /*break*/, 2];
+                    if (!(args.subject && args.recipient)) return [3 /*break*/, 3];
+                    if (!(serviceReport.data.length > 0)) return [3 /*break*/, 2];
                     recipients = Array.isArray(args.recipient)
                         ? args.recipient
                         : [args.recipient];
@@ -66,9 +67,11 @@ if (args.token && args["fleet-id"]) {
                 case 1:
                     sent = _a.sent();
                     console.log(sent);
-                    process.exit(0);
                     _a.label = 2;
                 case 2:
+                    process.exit(0);
+                    _a.label = 3;
+                case 3:
                     console.log("Argument error.");
                     process.exit(2);
                     return [2 /*return*/];

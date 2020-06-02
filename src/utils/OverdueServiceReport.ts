@@ -32,7 +32,7 @@ interface Overdues {
 
 export class OverdueServiceReport {
 	private constructor(
-		private data: Array<OverdueServiceData>,
+		public data: Array<OverdueServiceData>,
 		private timezone?: string
 	) {}
 
@@ -53,7 +53,9 @@ export class OverdueServiceReport {
 		};
 
 		if (service.isDaysOverdue) {
-			overdues.daysOverdue = service.getDate(timezone).fromNow();
+			const serviceDate = service.getDate(timezone);
+			overdues.daysOverdue =
+				(serviceDate.isValid() && serviceDate.fromNow()) || null;
 		}
 		if (service.isEngineHoursOverdue) {
 			let engineHoursOverdue = unit.engineHours - service.engineHours;
@@ -85,7 +87,7 @@ export class OverdueServiceReport {
 		timezone?: string
 	): OverdueServiceData => {
 		const unit = reportData.units.find(
-			unit => unit.data.id === reportData.service.data.uid
+			(unit) => unit.data.id === reportData.service.data.uid
 		);
 		const overdues =
 			unit &&
@@ -103,9 +105,7 @@ export class OverdueServiceReport {
 			mileageOverdue: OverdueServiceReport.getOverdueMessage(
 				overdues?.mileageOverdue
 			),
-			daysOverdue: OverdueServiceReport.getOverdueMessage(
-				overdues?.daysOverdue
-			),
+			daysOverdue: OverdueServiceReport.getOverdueMessage(overdues?.daysOverdue),
 			engineHoursOverdue: OverdueServiceReport.getOverdueMessage(
 				overdues?.engineHoursOverdue
 			)
@@ -136,8 +136,8 @@ export class OverdueServiceReport {
 		timezone?: string
 	): OverdueServiceData[] => {
 		const overdueServiceReportData: OverdueServiceData[] = data.services
-			.filter(service => !service.isInProgress)
-			.map(service =>
+			.filter((service) => !service.isInProgress)
+			.map((service) =>
 				OverdueServiceReport.getServiceStatusMessage(
 					{
 						units: data.units,
@@ -155,10 +155,7 @@ export class OverdueServiceReport {
 		fleetId: number,
 		timezone?: string
 	): Promise<OverdueServiceReport> => {
-		const reportData = await OverdueServiceReport.fetchReportData(
-			token,
-			fleetId
-		);
+		const reportData = await OverdueServiceReport.fetchReportData(token, fleetId);
 
 		const overdueServices = OverdueServiceReport.composeOverdueServiceData(
 			reportData,

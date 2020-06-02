@@ -100,7 +100,9 @@ var OverdueServiceReport = /** @class */ (function () {
             engineHoursOverdue: null
         };
         if (service.isDaysOverdue) {
-            overdues.daysOverdue = service.getDate(timezone).fromNow();
+            var serviceDate = service.getDate(timezone);
+            overdues.daysOverdue =
+                (serviceDate.isValid() && serviceDate.fromNow()) || null;
         }
         if (service.isEngineHoursOverdue) {
             var engineHoursOverdue = unit.engineHours - service.engineHours;

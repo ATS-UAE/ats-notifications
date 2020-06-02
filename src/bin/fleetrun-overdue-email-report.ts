@@ -4,12 +4,14 @@ dotenv.config();
 import { OverdueServiceReport } from "../utils/OverdueServiceReport";
 import minimist from "minimist";
 
+// Command line argument options.
 interface CommandLineArgs {
 	h?: boolean;
 	help?: boolean;
 	token?: string;
 	recipient?: string | string[];
 	subject?: string;
+	// eg. "+04:00"
 	timezone?: string;
 	"fleet-id"?: string;
 }
@@ -26,16 +28,19 @@ if (args.token && args["fleet-id"]) {
 		args.token,
 		parseInt(args["fleet-id"]),
 		args.timezone
-	).then(async serviceReport => {
+	).then(async (serviceReport) => {
 		if (args.subject && args.recipient) {
-			const recipients = Array.isArray(args.recipient)
-				? args.recipient
-				: [args.recipient];
-			const sent = await serviceReport.sendReportByEmail({
-				subject: args.subject,
-				recipients
-			});
-			console.log(sent);
+			// Send only if the service report has any pending services.
+			if (serviceReport.data.length > 0) {
+				const recipients = Array.isArray(args.recipient)
+					? args.recipient
+					: [args.recipient];
+				const sent = await serviceReport.sendReportByEmail({
+					subject: args.subject,
+					recipients
+				});
+				console.log(sent);
+			}
 			process.exit(0);
 		}
 		console.log("Argument error.");

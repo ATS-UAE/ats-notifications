@@ -34,5 +34,5 @@ export class Unit {
 				`/fleets/${typeof fleet === "number" ? fleet : fleet.data.id}/units`,
 				"GET"
 			)
-			.then(res => res.units.map(unit => new Unit(api, unit)));
+			.then((res) => res.units.map((unit) => new Unit(api, unit)));
 }
