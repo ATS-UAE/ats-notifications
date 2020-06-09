@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 "use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -40,66 +39,39 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var dotenv_1 = __importDefault(require("dotenv"));
-dotenv_1.default.config();
-var minimist_1 = __importDefault(require("minimist"));
-var NonReportingTrackersReport_1 = require("../utils/NonReportingTrackersReport");
-var args = minimist_1.default(process.argv);
-if (args.h || args.help) {
-    console.log("Work in progress...");
-    process.exit(0);
-}
-if (args["db-user"] &&
-    args["db-host"] &&
-    args["db-pass"] &&
-    args["sp-user"] &&
-    args["sp-password"] &&
-    args["wialon-token"]) {
-    NonReportingTrackersReport_1.NonReportingTrackersReport.create({
-        dbHost: args["db-host"],
-        dbPass: args["db-pass"],
-        dbUser: args["db-user"],
-        spPassword: args["sp-password"],
-        spUser: args["sp-user"],
-        wialonToken: args["wialon-token"]
-    }, {
-        threshold: args.threshold || 5
-    }, args.timezone)
-        .then(function (serviceReport) { return __awaiter(void 0, void 0, void 0, function () {
-        var recipients, sent;
+var promise_1 = __importDefault(require("mysql2/promise"));
+var JobCard = /** @class */ (function () {
+    function JobCard(data) {
+        this.id = data.id;
+        this.chassis = data.chassis_no;
+        this.client = data.client_name;
+        this.plateNo = data.plate_no;
+        this.vehicle = data.vehicle;
+        this.active = data.active === "yes";
+        this.imei = data.imei_no;
+        this.systemType =
+            data.system_type.toLowerCase() === "securepath" ? "securepath" : "wialon";
+    }
+    JobCard.findAll = function (dataBaseOptions, findAllOptions) { return __awaiter(void 0, void 0, void 0, function () {
+        var query, connection, jobCards;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    if (!(args.subject && args.recipient)) return [3 /*break*/, 3];
-                    if (!(serviceReport.data.length > 0)) return [3 /*break*/, 2];
-                    recipients = Array.isArray(args.recipient)
-                        ? args.recipient
-                        : [args.recipient];
-                    return [4 /*yield*/, serviceReport.sendReportByEmail({
-                            subject: args.subject,
-                            recipients: recipients
-                        })];
+                    query = "SELECT * FROM job_cards;";
+                    if (findAllOptions === null || findAllOptions === void 0 ? void 0 : findAllOptions.active) {
+                        query = "SELECT * FROM job_cards where active = \"yes\"";
+                    }
+                    return [4 /*yield*/, promise_1.default.createConnection(dataBaseOptions)];
                 case 1:
-                    sent = _a.sent();
-                    console.log(sent);
-                    _a.label = 2;
+                    connection = _a.sent();
+                    return [4 /*yield*/, connection.query(query)];
                 case 2:
-                    process.exit(0);
-                    _a.label = 3;
-                case 3:
-                    console.log("Argument error.");
-                    process.exit(2);
-                    return [2 /*return*/];
+                    jobCards = (_a.sent())[0];
+                    return [2 /*return*/, jobCards.map(function (j) { return new JobCard(j); })];
             }
         });
-    }); })
-        .catch(function (e) {
-        console.log(e);
-        process.exit(2);
-    });
-}
-else {
-    console.log("Argument error.");
-    process.exit(2);
-}
-//# sourceMappingURL=non-reporting-trackers-email-report.js.map
+    }); };
+    return JobCard;
+}());
+exports.JobCard = JobCard;
+//# sourceMappingURL=JobCard.js.map

@@ -1,12 +1,5 @@
 import moment from "moment";
-import {
-	Api,
-	ServiceStatus,
-	Fleet,
-	Interval,
-	Service,
-	Unit
-} from "./fleet-run";
+import { Api, Interval, Service, Unit } from "./fleet-run";
 import { EmailReport } from "./EmailReport";
 import { HtmlTable } from "./HtmlTable";
 
