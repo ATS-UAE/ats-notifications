@@ -36,6 +36,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Fleet = void 0;
 var Fleet = /** @class */ (function () {
     function Fleet(api, data) {
         this.api = api;

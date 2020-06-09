@@ -81,11 +81,14 @@ export class NonReportingTrackersReport {
 					(tracker.uid &&
 						jobCards.find((jc) => String(jc.imei) === String(tracker.uid))) ||
 					undefined;
+				if (!tracker.uid) {
+					console.log(`${tracker.nm} has no IMEI`);
+				}
 				acc.push({
 					chassis: jobCard?.chassis || "N/A",
 					client: jobCard?.client || "N/A",
 					daysSinceLastReport,
-					imei: tracker.uid || "N/A",
+					imei: tracker.uid || tracker.nm || "N/A",
 					lastReport: (lastReport && lastReport.format()) || "N/A",
 					plateNumber: jobCard?.plateNo || "N/A",
 					vehicle: jobCard?.vehicle || "N/A",
@@ -106,16 +109,21 @@ export class NonReportingTrackersReport {
 			{ baseUrl: "http://rac.securepath.ae:1024" }
 		);
 		const securepathUnits = await sp.Live.getTrackers();
-		const jobCards = await JobCard.findAll({
-			database: "atsoperations",
-			host: credentials.dbHost,
-			password: credentials.dbPass,
-			user: credentials.dbUser
-		});
+		const jobCards = await JobCard.findAll(
+			{
+				database: "atsoperations",
+				host: credentials.dbHost,
+				password: credentials.dbPass,
+				user: credentials.dbUser
+			},
+			{
+				active: true
+			}
+		);
 		const w = await Wialon.login({
 			token: credentials.wialonToken
 		});
-		const wialonUnits = await w.Utils.getUnits({ flags: 1024 + 256 });
+		const wialonUnits = await w.Utils.getUnits({ flags: 1024 + 256 + 1 });
 		const nonReportingTrackers: TrackerData[] = [
 			...NonReportingTrackersReport.getNonReportingSecurepath(
 				jobCards,
@@ -173,14 +181,19 @@ export class NonReportingTrackersReport {
 
 	public sendReportByEmail = ({
 		recipients,
-		subject
+		subject,
+		threshold
 	}: {
 		recipients: string[];
 		subject: string;
+		threshold: number;
 	}) => {
 		const emailReport = new EmailReport();
 		const currentDate = moment();
 		emailReport.appendBody("<h1>Non Reporting Tracker List.</h1>");
+		emailReport.appendBody(
+			`<p>Vehicles not reporting for more than ${threshold} days.</p>`
+		);
 		emailReport.appendBody(this.getHtmlTable());
 		if (this.timezone) {
 			emailReport.appendBody(
@@ -192,7 +205,8 @@ export class NonReportingTrackersReport {
 
 		return emailReport.send({
 			to: recipients,
-			subject
+			subject,
+			nickname: "ATS Notifications"
 		});
 	};
 }

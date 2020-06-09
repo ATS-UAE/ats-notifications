@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.mail = void 0;
 exports.mail = {
     host: process.env.MAIL_HOST,
     user: process.env.MAIL_USER,

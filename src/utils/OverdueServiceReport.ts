@@ -209,7 +209,8 @@ export class OverdueServiceReport {
 
 		return emailReport.send({
 			to: recipients,
-			subject
+			subject,
+			nickname: "FleetRun Notifications"
 		});
 	};
 }

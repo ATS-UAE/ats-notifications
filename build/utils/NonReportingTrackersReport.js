@@ -46,6 +46,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.NonReportingTrackersReport = void 0;
 var moment_1 = __importDefault(require("moment"));
 var node_wialon_1 = require("node-wialon");
 var securepath_api_1 = require("securepath-api");
@@ -133,11 +134,14 @@ var NonReportingTrackersReport = /** @class */ (function () {
                 var jobCard = (tracker.uid &&
                     jobCards.find(function (jc) { return String(jc.imei) === String(tracker.uid); })) ||
                     undefined;
+                if (!tracker.uid) {
+                    console.log(tracker.nm + " has no IMEI");
+                }
                 acc.push({
                     chassis: (jobCard === null || jobCard === void 0 ? void 0 : jobCard.chassis) || "N/A",
                     client: (jobCard === null || jobCard === void 0 ? void 0 : jobCard.client) || "N/A",
                     daysSinceLastReport: daysSinceLastReport,
-                    imei: tracker.uid || "N/A",
+                    imei: tracker.uid || tracker.nm || "N/A",
                     lastReport: (lastReport && lastReport.format()) || "N/A",
                     plateNumber: (jobCard === null || jobCard === void 0 ? void 0 : jobCard.plateNo) || "N/A",
                     vehicle: (jobCard === null || jobCard === void 0 ? void 0 : jobCard.vehicle) || "N/A",
@@ -162,6 +166,8 @@ var NonReportingTrackersReport = /** @class */ (function () {
                             host: credentials.dbHost,
                             password: credentials.dbPass,
                             user: credentials.dbUser
+                        }, {
+                            active: true
                         })];
                 case 3:
                     jobCards = _a.sent();
@@ -170,7 +176,7 @@ var NonReportingTrackersReport = /** @class */ (function () {
                         })];
                 case 4:
                     w = _a.sent();
-                    return [4 /*yield*/, w.Utils.getUnits({ flags: 1024 + 256 })];
+                    return [4 /*yield*/, w.Utils.getUnits({ flags: 1024 + 256 + 1 })];
                 case 5:
                     wialonUnits = _a.sent();
                     nonReportingTrackers = __spreadArrays(NonReportingTrackersReport.getNonReportingSecurepath(jobCards, securepathUnits, options.threshold), NonReportingTrackersReport.getNonReportingWialon(jobCards, wialonUnits, options.threshold));

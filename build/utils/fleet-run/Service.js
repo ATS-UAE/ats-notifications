@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Service = exports.ServiceStatus = void 0;
 var moment_1 = __importDefault(require("moment"));
 var ServiceStatus;
 (function (ServiceStatus) {
@@ -48,7 +49,7 @@ var Service = /** @class */ (function () {
         get: function () {
             return this.getServiceStatus().includes(ServiceStatus.IN_PROGRESS);
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     Object.defineProperty(Service.prototype, "isMileageOverdue", {
@@ -57,7 +58,7 @@ var Service = /** @class */ (function () {
             return (serviceStatus.includes(ServiceStatus.OVERDUE) &&
                 serviceStatus.includes(ServiceStatus.OVERDUE_BY_MILEAGE));
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     Object.defineProperty(Service.prototype, "isEngineHoursOverdue", {
@@ -66,7 +67,7 @@ var Service = /** @class */ (function () {
             return (serviceStatus.includes(ServiceStatus.OVERDUE) &&
                 serviceStatus.includes(ServiceStatus.OVERDUE_BY_ENGINE_HOURS));
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     Object.defineProperty(Service.prototype, "isDaysOverdue", {
@@ -75,21 +76,21 @@ var Service = /** @class */ (function () {
             return (serviceStatus.includes(ServiceStatus.OVERDUE) &&
                 serviceStatus.includes(ServiceStatus.OVERDUE_BY_DAYS));
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     Object.defineProperty(Service.prototype, "mileage", {
         get: function () {
             return this.data.cnm;
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     Object.defineProperty(Service.prototype, "engineHours", {
         get: function () {
             return this.data.cnm;
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     Service.prototype.getDate = function (timeZone) {

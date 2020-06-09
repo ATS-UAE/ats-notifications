@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.HtmlTable = void 0;
 var HtmlTable = /** @class */ (function () {
     function HtmlTable(columns) {
         var _this = this;

@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Interval = void 0;
 var Interval = /** @class */ (function () {
     function Interval(api, data) {
         this.api = api;

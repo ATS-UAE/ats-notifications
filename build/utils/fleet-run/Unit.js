@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Unit = void 0;
 var Unit = /** @class */ (function () {
     function Unit(api, data) {
         this.api = api;
@@ -9,14 +10,14 @@ var Unit = /** @class */ (function () {
         get: function () {
             return this.data.cnm;
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     Object.defineProperty(Unit.prototype, "engineHours", {
         get: function () {
             return this.data.cneh;
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     Unit.getAll = function (api, fleet) {

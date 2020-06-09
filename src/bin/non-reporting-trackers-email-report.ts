@@ -61,7 +61,8 @@ if (
 						: [args.recipient];
 					const sent = await serviceReport.sendReportByEmail({
 						subject: args.subject,
-						recipients
+						recipients,
+						threshold: args.threshold || 5
 					});
 					console.log(sent);
 				}

@@ -11,6 +11,7 @@ var __assign = (this && this.__assign) || function () {
     return __assign.apply(this, arguments);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.EmailReport = void 0;
 var Mailer_1 = require("./Mailer");
 var EmailReport = /** @class */ (function () {
     function EmailReport() {
