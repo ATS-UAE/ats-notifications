@@ -77,7 +77,8 @@ if (args["db-user"] &&
                         : [args.recipient];
                     return [4 /*yield*/, serviceReport.sendReportByEmail({
                             subject: args.subject,
-                            recipients: recipients
+                            recipients: recipients,
+                            threshold: args.threshold || 5
                         })];
                 case 1:
                     sent = _a.sent();

@@ -5,10 +5,12 @@ export interface ServiceData {
 	ats: number;
 	c: number | null;
 	cneh: number | null;
+	/** Mileage counter */
 	cnm: number;
 	d: string;
 	f: number;
-	fdt: string; // Date in format "2020-03-16"
+	/** Date in format "2020-03-16" */
+	fdt: string;
 	fid: number;
 	ftm: string;
 	id: number;
@@ -22,9 +24,11 @@ export interface ServiceData {
 	}>;
 	limcneh: number;
 	limcnm: number;
-	limdt: string; // Date in format "2020-03-16"
+	/** Date in format "2020-03-16" */
+	limdt: string;
 	n: string;
-	sdt: string; // Date in format "2020-03-16"
+	/** Starting date in format "2020-03-16" */
+	sdt: string;
 	stm: string;
 	tm: number;
 	uid: number;
@@ -57,9 +61,9 @@ export class Service {
 	private static POSSIBLE_FLAG_VALUES: ServiceStatus[] = Object.keys(
 		ServiceStatus
 	)
-		.map(k => ServiceStatus[k as any])
+		.map((k) => ServiceStatus[k as any])
 		.map((v: unknown) => v as ServiceStatus)
-		.filter(ss => ss in ServiceStatus)
+		.filter((ss) => ss in ServiceStatus)
 		.sort(numberSorter)
 		.reverse();
 
@@ -98,7 +102,7 @@ export class Service {
 		return this.data.cnm;
 	}
 
-	public getDate(timeZone?: string): moment.Moment {
+	public getDate(timeZone?: string): moment.Moment | null {
 		const date = [this.data.sdt, "YYYY-MM-DD"];
 		const time = [this.data.stm, "HH:mm:ss"];
 
@@ -106,6 +110,9 @@ export class Service {
 
 		if (timeZone) {
 			return parsedDate.utcOffset(timeZone);
+		}
+		if (!parsedDate.isValid) {
+			return null;
 		}
 		return parsedDate;
 	}
@@ -116,7 +123,7 @@ export class Service {
 				`/fleets/${typeof fleet === "number" ? fleet : fleet.data.id}/services`,
 				"GET"
 			)
-			.then(res => res.services.map(service => new Service(api, service)));
+			.then((res) => res.services.map((service) => new Service(api, service)));
 
 	public getServiceStatus = (): ServiceStatus[] => {
 		let flagRemaining = this.data.f;

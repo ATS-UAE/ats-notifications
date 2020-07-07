@@ -100,6 +100,9 @@ var Service = /** @class */ (function () {
         if (timeZone) {
             return parsedDate.utcOffset(timeZone);
         }
+        if (!parsedDate.isValid) {
+            return null;
+        }
         return parsedDate;
     };
     Service.POSSIBLE_FLAG_VALUES = Object.keys(ServiceStatus)

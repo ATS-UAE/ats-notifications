@@ -84,10 +84,11 @@ var NonReportingTrackersReport = /** @class */ (function () {
             return table;
         };
         this.sendReportByEmail = function (_a) {
-            var recipients = _a.recipients, subject = _a.subject;
+            var recipients = _a.recipients, subject = _a.subject, threshold = _a.threshold;
             var emailReport = new EmailReport_1.EmailReport();
             var currentDate = moment_1.default();
             emailReport.appendBody("<h1>Non Reporting Tracker List.</h1>");
+            emailReport.appendBody("<p>Vehicles not reporting for more than " + threshold + " days.</p>");
             emailReport.appendBody(_this.getHtmlTable());
             if (_this.timezone) {
                 emailReport.appendBody("<p>Sent " + currentDate.utcOffset(_this.timezone).format() + "</p>");
@@ -97,7 +98,8 @@ var NonReportingTrackersReport = /** @class */ (function () {
             }
             return emailReport.send({
                 to: recipients,
-                subject: subject
+                subject: subject,
+                nickname: "ATS Notifications"
             });
         };
     }

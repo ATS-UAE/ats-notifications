@@ -53,21 +53,23 @@ var OverdueServiceReport = /** @class */ (function () {
             var table = new HtmlTable_1.HtmlTable([
                 "Unit name",
                 "Service name",
+                "Mileage counter",
+                "Engine hours counter",
                 "Mileage overdue",
                 "Days overdue",
                 "Engine hours overdue"
             ]);
             for (var _i = 0, _a = _this.data; _i < _a.length; _i++) {
                 var row = _a[_i];
-                var mileageOverdue = typeof row.mileageOverdue === "number"
-                    ? row.mileageOverdue + " km"
-                    : row.mileageOverdue;
-                var engineHoursOverdue = typeof row.engineHoursOverdue === "number"
-                    ? row.engineHoursOverdue + " hours"
-                    : row.engineHoursOverdue;
+                var mileageOverdue = OverdueServiceReport.formatStringValue(row.mileageOverdue, "km");
+                var engineHoursOverdue = OverdueServiceReport.formatStringValue(row.engineHoursOverdue, "hours");
+                var engineHours = OverdueServiceReport.formatStringValue(row.engineHours, "hours");
+                var mileage = OverdueServiceReport.formatStringValue(row.mileage, "km");
                 table.addRow([
                     row.unit,
                     row.serviceName,
+                    mileage,
+                    engineHours,
                     mileageOverdue,
                     row.daysOverdue,
                     engineHoursOverdue
@@ -89,7 +91,8 @@ var OverdueServiceReport = /** @class */ (function () {
             }
             return emailReport.send({
                 to: recipients,
-                subject: subject
+                subject: subject,
+                nickname: "FleetRun Notifications"
             });
         };
     }
@@ -100,16 +103,22 @@ var OverdueServiceReport = /** @class */ (function () {
             mileageOverdue: null,
             engineHoursOverdue: null
         };
-        if (service.isDaysOverdue) {
+        var isDaysOverdue = service.isDaysOverdue;
+        var isEngineHoursOverdue = service.isEngineHoursOverdue;
+        var isMileageOverdue = service.isMileageOverdue;
+        if (!isMileageOverdue && !isEngineHoursOverdue && !isDaysOverdue) {
+            return null;
+        }
+        if (isDaysOverdue) {
             var serviceDate = service.getDate(timezone);
             overdues.daysOverdue =
-                (serviceDate.isValid() && serviceDate.fromNow()) || null;
+                (serviceDate && moment_1.default().diff(serviceDate, "days")) || null;
         }
-        if (service.isEngineHoursOverdue) {
+        if (isEngineHoursOverdue) {
             var engineHoursOverdue = unit.engineHours - service.engineHours;
             overdues.engineHoursOverdue = engineHoursOverdue;
         }
-        if (service.isMileageOverdue) {
+        if (isMileageOverdue) {
             var mileageOverdue = unit.mileage - service.mileage;
             overdues.mileageOverdue = mileageOverdue;
         }
@@ -122,21 +131,26 @@ var OverdueServiceReport = /** @class */ (function () {
         return value;
     };
     OverdueServiceReport.getServiceStatusMessage = function (reportData, timezone) {
-        var _a;
         var unit = reportData.units.find(function (unit) { return unit.data.id === reportData.service.data.uid; });
-        var overdues = unit &&
-            OverdueServiceReport.getOverdues({
+        if (unit) {
+            var overdues = OverdueServiceReport.getOverdues({
                 unit: unit,
                 service: reportData.service
             }, timezone);
-        var message = {
-            unit: ((_a = unit === null || unit === void 0 ? void 0 : unit.data) === null || _a === void 0 ? void 0 : _a.n) || "N/A",
-            serviceName: reportData.service.data.n,
-            mileageOverdue: OverdueServiceReport.getOverdueMessage(overdues === null || overdues === void 0 ? void 0 : overdues.mileageOverdue),
-            daysOverdue: OverdueServiceReport.getOverdueMessage(overdues === null || overdues === void 0 ? void 0 : overdues.daysOverdue),
-            engineHoursOverdue: OverdueServiceReport.getOverdueMessage(overdues === null || overdues === void 0 ? void 0 : overdues.engineHoursOverdue)
-        };
-        return message;
+            if (overdues) {
+                var message = {
+                    unit: unit.data.n,
+                    mileage: unit.mileage,
+                    engineHours: unit.engineHours,
+                    serviceName: reportData.service.data.n,
+                    mileageOverdue: OverdueServiceReport.getOverdueMessage(overdues.mileageOverdue),
+                    daysOverdue: OverdueServiceReport.getOverdueMessage(overdues.daysOverdue),
+                    engineHoursOverdue: OverdueServiceReport.getOverdueMessage(overdues.engineHoursOverdue)
+                };
+                return message;
+            }
+        }
+        return null;
     };
     OverdueServiceReport.fetchReportData = function (token, fleetId) { return __awaiter(void 0, void 0, void 0, function () {
         var api, units, intervals, services;
@@ -171,7 +185,8 @@ var OverdueServiceReport = /** @class */ (function () {
                 intervals: data.intervals,
                 service: service
             }, timezone);
-        });
+        })
+            .filter(function (service) { return service !== null; });
         return overdueServiceReportData;
     };
     OverdueServiceReport.create = function (token, fleetId, timezone) { return __awaiter(void 0, void 0, void 0, function () {
@@ -186,6 +201,9 @@ var OverdueServiceReport = /** @class */ (function () {
             }
         });
     }); };
+    OverdueServiceReport.formatStringValue = function (value, append) {
+        return typeof value === "number" ? value + " " + append : value;
+    };
     return OverdueServiceReport;
 }());
 exports.OverdueServiceReport = OverdueServiceReport;

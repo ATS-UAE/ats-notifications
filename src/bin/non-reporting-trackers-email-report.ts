@@ -1,10 +1,8 @@
 #!/usr/bin/env node
 import dotenv from "dotenv";
 dotenv.config();
-import { OverdueServiceReport } from "../utils/OverdueServiceReport";
 import minimist from "minimist";
 import { NonReportingTrackersReport } from "../utils/NonReportingTrackersReport";
-import { SpawnSyncOptionsWithStringEncoding } from "child_process";
 
 // Command line argument options.
 interface CommandLineArgs {

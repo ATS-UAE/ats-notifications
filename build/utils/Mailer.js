@@ -12,7 +12,7 @@ var Mailer = /** @class */ (function () {
         this.sendMail = function (options) {
             return new Promise(function (resolve, reject) {
                 _this.mailer.sendMail({
-                    from: "FleetRun Notifications <no-reply@atsuae.net>",
+                    from: options.nickname + " <no-reply@atsuae.net>",
                     to: options.to,
                     subject: options.subject,
                     html: options.body
