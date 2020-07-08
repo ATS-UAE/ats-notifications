@@ -6,11 +6,11 @@ import { HtmlTable } from "./HtmlTable";
 interface OverdueServiceData {
 	unit: string;
 	serviceName: string;
-	mileage: number | "N/A";
-	engineHours: number | "N/A";
-	mileageOverdue: number | "N/A";
-	daysOverdue: number | "N/A";
-	engineHoursOverdue: number | "N/A";
+	mileage: number | null;
+	engineHours: number | null;
+	mileageOverdue: number | null;
+	daysOverdue: number | null;
+	engineHoursOverdue: number | null;
 }
 
 interface ReportData {
@@ -34,10 +34,12 @@ export class OverdueServiceReport {
 	private static getOverdues = (
 		{
 			service,
-			unit
+			unit,
+			interval
 		}: {
 			service: Service;
 			unit: Unit;
+			interval: Interval;
 		},
 		timezone?: string
 	): Overdues | null => {
@@ -60,12 +62,18 @@ export class OverdueServiceReport {
 				(serviceDate && moment().diff(serviceDate, "days")) || null;
 		}
 		if (isEngineHoursOverdue) {
-			const engineHoursOverdue = unit.engineHours - service.engineHours;
-			overdues.engineHoursOverdue = engineHoursOverdue;
+			if (service.engineHours) {
+				overdues.engineHoursOverdue = unit.engineHours - service.engineHours;
+			} else {
+				overdues.engineHoursOverdue = unit.engineHours;
+			}
 		}
 		if (isMileageOverdue) {
-			const mileageOverdue = unit.mileage - service.mileage;
-			overdues.mileageOverdue = mileageOverdue;
+			if (service.mileage) {
+				overdues.mileageOverdue = unit.mileage - service.mileage;
+			} else {
+				overdues.mileageOverdue = unit.mileage;
+			}
 		}
 
 		return overdues;
@@ -73,9 +81,9 @@ export class OverdueServiceReport {
 
 	private static getOverdueMessage = (
 		value: number | undefined | null
-	): number | "N/A" => {
+	): number | null => {
 		if (value === undefined || value === null) {
-			return "N/A";
+			return null;
 		}
 		return value;
 	};
@@ -83,39 +91,35 @@ export class OverdueServiceReport {
 	private static getServiceStatusMessage = (
 		reportData: {
 			service: Service;
-			intervals: Interval[];
-			units: Unit[];
+			interval: Interval;
+			unit: Unit;
 		},
 		timezone?: string
 	): OverdueServiceData | null => {
-		const unit = reportData.units.find(
-			(unit) => unit.data.id === reportData.service.data.uid
+		const overdues = OverdueServiceReport.getOverdues(
+			{
+				unit: reportData.unit,
+				service: reportData.service,
+				interval: reportData.interval
+			},
+			timezone
 		);
-		if (unit) {
-			const overdues = OverdueServiceReport.getOverdues(
-				{
-					unit,
-					service: reportData.service
-				},
-				timezone
-			);
 
-			if (overdues) {
-				const message: OverdueServiceData = {
-					unit: unit.data.n,
-					mileage: unit.mileage,
-					engineHours: unit.engineHours,
-					serviceName: reportData.service.data.n,
-					mileageOverdue: OverdueServiceReport.getOverdueMessage(
-						overdues.mileageOverdue
-					),
-					daysOverdue: OverdueServiceReport.getOverdueMessage(overdues.daysOverdue),
-					engineHoursOverdue: OverdueServiceReport.getOverdueMessage(
-						overdues.engineHoursOverdue
-					)
-				};
-				return message;
-			}
+		if (overdues) {
+			const message: OverdueServiceData = {
+				unit: reportData.unit.data.n,
+				mileage: reportData.unit.mileage,
+				engineHours: reportData.unit.engineHours,
+				serviceName: reportData.service.data.n,
+				mileageOverdue: OverdueServiceReport.getOverdueMessage(
+					overdues.mileageOverdue
+				),
+				daysOverdue: OverdueServiceReport.getOverdueMessage(overdues.daysOverdue),
+				engineHoursOverdue: OverdueServiceReport.getOverdueMessage(
+					overdues.engineHoursOverdue
+				)
+			};
+			return message;
 		}
 		return null;
 	};
@@ -143,17 +147,24 @@ export class OverdueServiceReport {
 	): OverdueServiceData[] => {
 		const overdueServiceReportData: OverdueServiceData[] = data.services
 			.filter((service) => !service.isInProgress)
-			.map((service) =>
-				OverdueServiceReport.getServiceStatusMessage(
-					{
-						units: data.units,
-						intervals: data.intervals,
-						service
-					},
-					timezone
-				)
-			)
-			.filter((service): service is OverdueServiceData => service !== null);
+			.reduce<OverdueServiceData[]>((acc, service) => {
+				const unit = data.units.find((unit) => unit.data.id === service.data.uid);
+				const interval = data.intervals.find(
+					(interval) => interval.data.id === service.data.ivid
+				);
+				if (unit && interval) {
+					const serviceStatus = OverdueServiceReport.getServiceStatusMessage(
+						{
+							unit,
+							interval,
+							service
+						},
+						timezone
+					);
+					serviceStatus && acc.push(serviceStatus);
+				}
+				return acc;
+			}, []);
 		return overdueServiceReportData;
 	};
 
@@ -173,10 +184,10 @@ export class OverdueServiceReport {
 	};
 
 	private static formatStringValue = (
-		value: number | string,
+		value: number | null,
 		append: string
-	) => {
-		return typeof value === "number" ? `${value} ${append}` : value;
+	): string => {
+		return typeof value === "number" ? `${value} ${append}` : "N/A";
 	};
 
 	private getHtmlTable = () => {
@@ -200,6 +211,11 @@ export class OverdueServiceReport {
 				"hours"
 			);
 
+			const daysOverdue = OverdueServiceReport.formatStringValue(
+				row.mileage,
+				"days"
+			);
+
 			const engineHours = OverdueServiceReport.formatStringValue(
 				row.engineHours,
 				"hours"
@@ -213,7 +229,7 @@ export class OverdueServiceReport {
 				mileage,
 				engineHours,
 				mileageOverdue,
-				row.daysOverdue,
+				daysOverdue,
 				engineHoursOverdue
 			]);
 		}

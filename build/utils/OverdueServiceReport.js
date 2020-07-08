@@ -63,6 +63,7 @@ var OverdueServiceReport = /** @class */ (function () {
                 var row = _a[_i];
                 var mileageOverdue = OverdueServiceReport.formatStringValue(row.mileageOverdue, "km");
                 var engineHoursOverdue = OverdueServiceReport.formatStringValue(row.engineHoursOverdue, "hours");
+                var daysOverdue = OverdueServiceReport.formatStringValue(row.mileage, "days");
                 var engineHours = OverdueServiceReport.formatStringValue(row.engineHours, "hours");
                 var mileage = OverdueServiceReport.formatStringValue(row.mileage, "km");
                 table.addRow([
@@ -71,7 +72,7 @@ var OverdueServiceReport = /** @class */ (function () {
                     mileage,
                     engineHours,
                     mileageOverdue,
-                    row.daysOverdue,
+                    daysOverdue,
                     engineHoursOverdue
                 ]);
             }
@@ -97,7 +98,7 @@ var OverdueServiceReport = /** @class */ (function () {
         };
     }
     OverdueServiceReport.getOverdues = function (_a, timezone) {
-        var service = _a.service, unit = _a.unit;
+        var service = _a.service, unit = _a.unit, interval = _a.interval;
         var overdues = {
             daysOverdue: null,
             mileageOverdue: null,
@@ -115,40 +116,46 @@ var OverdueServiceReport = /** @class */ (function () {
                 (serviceDate && moment_1.default().diff(serviceDate, "days")) || null;
         }
         if (isEngineHoursOverdue) {
-            var engineHoursOverdue = unit.engineHours - service.engineHours;
-            overdues.engineHoursOverdue = engineHoursOverdue;
+            if (service.engineHours) {
+                overdues.engineHoursOverdue = unit.engineHours - service.engineHours;
+            }
+            else {
+                overdues.engineHoursOverdue = unit.engineHours;
+            }
         }
         if (isMileageOverdue) {
-            var mileageOverdue = unit.mileage - service.mileage;
-            overdues.mileageOverdue = mileageOverdue;
+            if (service.mileage) {
+                overdues.mileageOverdue = unit.mileage - service.mileage;
+            }
+            else {
+                overdues.mileageOverdue = unit.mileage;
+            }
         }
         return overdues;
     };
     OverdueServiceReport.getOverdueMessage = function (value) {
         if (value === undefined || value === null) {
-            return "N/A";
+            return null;
         }
         return value;
     };
     OverdueServiceReport.getServiceStatusMessage = function (reportData, timezone) {
-        var unit = reportData.units.find(function (unit) { return unit.data.id === reportData.service.data.uid; });
-        if (unit) {
-            var overdues = OverdueServiceReport.getOverdues({
-                unit: unit,
-                service: reportData.service
-            }, timezone);
-            if (overdues) {
-                var message = {
-                    unit: unit.data.n,
-                    mileage: unit.mileage,
-                    engineHours: unit.engineHours,
-                    serviceName: reportData.service.data.n,
-                    mileageOverdue: OverdueServiceReport.getOverdueMessage(overdues.mileageOverdue),
-                    daysOverdue: OverdueServiceReport.getOverdueMessage(overdues.daysOverdue),
-                    engineHoursOverdue: OverdueServiceReport.getOverdueMessage(overdues.engineHoursOverdue)
-                };
-                return message;
-            }
+        var overdues = OverdueServiceReport.getOverdues({
+            unit: reportData.unit,
+            service: reportData.service,
+            interval: reportData.interval
+        }, timezone);
+        if (overdues) {
+            var message = {
+                unit: reportData.unit.data.n,
+                mileage: reportData.unit.mileage,
+                engineHours: reportData.unit.engineHours,
+                serviceName: reportData.service.data.n,
+                mileageOverdue: OverdueServiceReport.getOverdueMessage(overdues.mileageOverdue),
+                daysOverdue: OverdueServiceReport.getOverdueMessage(overdues.daysOverdue),
+                engineHoursOverdue: OverdueServiceReport.getOverdueMessage(overdues.engineHoursOverdue)
+            };
+            return message;
         }
         return null;
     };
@@ -179,14 +186,19 @@ var OverdueServiceReport = /** @class */ (function () {
     OverdueServiceReport.composeOverdueServiceData = function (data, timezone) {
         var overdueServiceReportData = data.services
             .filter(function (service) { return !service.isInProgress; })
-            .map(function (service) {
-            return OverdueServiceReport.getServiceStatusMessage({
-                units: data.units,
-                intervals: data.intervals,
-                service: service
-            }, timezone);
-        })
-            .filter(function (service) { return service !== null; });
+            .reduce(function (acc, service) {
+            var unit = data.units.find(function (unit) { return unit.data.id === service.data.uid; });
+            var interval = data.intervals.find(function (interval) { return interval.data.id === service.data.ivid; });
+            if (unit && interval) {
+                var serviceStatus = OverdueServiceReport.getServiceStatusMessage({
+                    unit: unit,
+                    interval: interval,
+                    service: service
+                }, timezone);
+                serviceStatus && acc.push(serviceStatus);
+            }
+            return acc;
+        }, []);
         return overdueServiceReportData;
     };
     OverdueServiceReport.create = function (token, fleetId, timezone) { return __awaiter(void 0, void 0, void 0, function () {
@@ -202,7 +214,7 @@ var OverdueServiceReport = /** @class */ (function () {
         });
     }); };
     OverdueServiceReport.formatStringValue = function (value, append) {
-        return typeof value === "number" ? value + " " + append : value;
+        return typeof value === "number" ? value + " " + append : "N/A";
     };
     return OverdueServiceReport;
 }());

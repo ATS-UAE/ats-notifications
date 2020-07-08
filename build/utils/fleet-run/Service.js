@@ -29,52 +29,38 @@ function numberSorter(num1, num2) {
 }
 var Service = /** @class */ (function () {
     function Service(api, data) {
-        var _this = this;
         this.api = api;
         this.data = data;
-        this.getServiceStatus = function () {
-            var flagRemaining = _this.data.f;
-            var status = [];
-            for (var _i = 0, _a = Service.POSSIBLE_FLAG_VALUES; _i < _a.length; _i++) {
-                var value = _a[_i];
-                if (flagRemaining >= value) {
-                    status.push(value);
-                    flagRemaining -= value;
-                }
-            }
-            return status.sort(numberSorter);
-        };
+        this.serviceStatus = [];
+        this.serviceStatus = Service.getServiceStatus(data.f);
     }
     Object.defineProperty(Service.prototype, "isInProgress", {
         get: function () {
-            return this.getServiceStatus().includes(ServiceStatus.IN_PROGRESS);
+            return this.serviceStatus.includes(ServiceStatus.IN_PROGRESS);
         },
         enumerable: false,
         configurable: true
     });
     Object.defineProperty(Service.prototype, "isMileageOverdue", {
         get: function () {
-            var serviceStatus = this.getServiceStatus();
-            return (serviceStatus.includes(ServiceStatus.OVERDUE) &&
-                serviceStatus.includes(ServiceStatus.OVERDUE_BY_MILEAGE));
+            return (this.serviceStatus.includes(ServiceStatus.OVERDUE) &&
+                this.serviceStatus.includes(ServiceStatus.OVERDUE_BY_MILEAGE));
         },
         enumerable: false,
         configurable: true
     });
     Object.defineProperty(Service.prototype, "isEngineHoursOverdue", {
         get: function () {
-            var serviceStatus = this.getServiceStatus();
-            return (serviceStatus.includes(ServiceStatus.OVERDUE) &&
-                serviceStatus.includes(ServiceStatus.OVERDUE_BY_ENGINE_HOURS));
+            return (this.serviceStatus.includes(ServiceStatus.OVERDUE) &&
+                this.serviceStatus.includes(ServiceStatus.OVERDUE_BY_ENGINE_HOURS));
         },
         enumerable: false,
         configurable: true
     });
     Object.defineProperty(Service.prototype, "isDaysOverdue", {
         get: function () {
-            var serviceStatus = this.getServiceStatus();
-            return (serviceStatus.includes(ServiceStatus.OVERDUE) &&
-                serviceStatus.includes(ServiceStatus.OVERDUE_BY_DAYS));
+            return (this.serviceStatus.includes(ServiceStatus.OVERDUE) &&
+                this.serviceStatus.includes(ServiceStatus.OVERDUE_BY_DAYS));
         },
         enumerable: false,
         configurable: true
@@ -88,7 +74,7 @@ var Service = /** @class */ (function () {
     });
     Object.defineProperty(Service.prototype, "engineHours", {
         get: function () {
-            return this.data.cnm;
+            return this.data.cneh;
         },
         enumerable: false,
         configurable: true
@@ -105,6 +91,7 @@ var Service = /** @class */ (function () {
         }
         return parsedDate;
     };
+    /** The values of ServiceStatus enum stored in an array. */
     Service.POSSIBLE_FLAG_VALUES = Object.keys(ServiceStatus)
         .map(function (k) { return ServiceStatus[k]; })
         .map(function (v) { return v; })
@@ -115,6 +102,18 @@ var Service = /** @class */ (function () {
         return api
             .runApi("/fleets/" + (typeof fleet === "number" ? fleet : fleet.data.id) + "/services", "GET")
             .then(function (res) { return res.services.map(function (service) { return new Service(api, service); }); });
+    };
+    Service.getServiceStatus = function (flags) {
+        var flagRemaining = flags;
+        var status = [];
+        for (var _i = 0, _a = Service.POSSIBLE_FLAG_VALUES; _i < _a.length; _i++) {
+            var value = _a[_i];
+            if (flagRemaining >= value) {
+                status.push(value);
+                flagRemaining -= value;
+            }
+        }
+        return status.sort(numberSorter);
     };
     return Service;
 }());

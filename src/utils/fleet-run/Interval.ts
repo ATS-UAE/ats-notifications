@@ -1,36 +1,51 @@
 import { Api } from "./Api";
 import { Fleet } from "./Fleet";
+import { LineItem } from "./LineItem";
 
-export interface IntervalData {
-	c: number | null;
-	cnehd: number | null;
-	cnehe: boolean;
-	cneho: number | null;
-	cnmd: number | null;
-	cnme: boolean;
-	cnmo: number | null;
-	d: string;
-	dd: string;
-	de: boolean;
-	do: boolean;
+export interface UnitInterval {
+	/** Entity ID */
 	id: number;
-	li: Array<unknown>;
+	/** Enity type. One of: u - unit, t - trailer, d - driver. */
+	t: "u" | "t" | "d";
+	/** Last engine hours */
+	lcneh: number | null;
+	/** Last mileage. */
+	lcnm: number | null;
+	/** Last date in format "YYYY-MM-DD" */
+	ldt: string | null;
+}
+export interface IntervalData {
+	/** Cost */
+	c: number | null;
+	/** Engine hours delta */
+	cnehd: number | null;
+	/** Engine hours enabled */
+	cnehe: boolean;
+	/** Engine hours offset */
+	cneho: number | null;
+	/** Mileage delta */
+	cnmd: number | null;
+	/** Mileage enabled */
+	cnme: boolean;
+	/** Mileage offset */
+	cnmo: number | null;
+	/** details */
+	d: string;
+	/** Days delta */
+	dd: string;
+	/** Days enabled */
+	de: boolean;
+	/** Days offset */
+	do: boolean;
+	/** Interval ID */
+	id: number;
+
+	li: LineItem[];
 	n: string;
 	/**Assigned units*/
 	tm: number;
 	/**Assigned units*/
-	u: Array<{
-		/**Entity id*/
-		id: number;
-		/**Entity Type */
-		t: string;
-		/**last engine hours */
-		lcneh: number;
-		/**last mileage */
-		lcnm: number;
-		/**last date */
-		ldt: string;
-	}>;
+	u: UnitInterval[];
 }
 
 export class Interval {
@@ -39,10 +54,8 @@ export class Interval {
 	public static getAll = (api: Api, fleet: number | Fleet) =>
 		api
 			.runApi<{ intervals: IntervalData[] }>(
-				`/fleets/${
-					typeof fleet === "number" ? fleet : fleet.data.id
-				}/intervals`,
+				`/fleets/${typeof fleet === "number" ? fleet : fleet.data.id}/intervals`,
 				"GET"
 			)
-			.then(res => res.intervals.map(interval => new Interval(api, interval)));
+			.then((res) => res.intervals.map((interval) => new Interval(api, interval)));
 }

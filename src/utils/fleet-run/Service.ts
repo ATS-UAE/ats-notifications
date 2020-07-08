@@ -1,37 +1,49 @@
 import moment from "moment";
 import { Api, Fleet } from ".";
+import { LineItem } from "./LineItem";
 
 export interface ServiceData {
+	/** Attachments number */
 	ats: number;
+	/** cost */
 	c: number | null;
+	/** Engine hour counter */
 	cneh: number | null;
 	/** Mileage counter */
-	cnm: number;
+	cnm: number | null;
+	/** Details */
 	d: string;
+	/** Flags that indicate service status. */
 	f: number;
-	/** Date in format "2020-03-16" */
-	fdt: string;
+	/** Finish date in format "YYYY-MM-DD" */
+	fdt: string | null;
+	/** Fleet ID */
 	fid: number;
+	/** Finish time in format "HH:mm:ss" */
 	ftm: string;
+	/** Service ID */
 	id: number;
+	/** Interval ID */
 	ivid: number;
-	li: Array<{
-		c: number;
-		id: number;
-		n: string;
-		num: number;
-		t: 1;
-	}>;
-	limcneh: number;
-	limcnm: number;
-	/** Date in format "2020-03-16" */
-	limdt: string;
+	/** Line items */
+	li: Array<LineItem>;
+	/** Last engine hour service */
+	limcneh: number | null;
+	/** Last mileage service */
+	limcnm: number | null;
+	/** Last service date in format "YYYY-MM-DD" */
+	limdt: string | null;
+	/** Name */
 	n: string;
-	/** Starting date in format "2020-03-16" */
-	sdt: string;
+	/** Starting date in format "YYYY-MM-DD" */
+	sdt: string | null;
+	/** Starting time in format HH:mm:ss */
 	stm: string;
+	/** Unix timestamp of latest update. */
 	tm: number;
+	/** Unit ID */
 	uid: number;
+	/** Entity type, one of: u - unit, t - trailer, d - driver */
 	t: "u" | "t" | "d";
 }
 
@@ -58,6 +70,7 @@ function numberSorter(num1: number, num2: number) {
 }
 
 export class Service {
+	/** The values of ServiceStatus enum stored in an array. */
 	private static POSSIBLE_FLAG_VALUES: ServiceStatus[] = Object.keys(
 		ServiceStatus
 	)
@@ -67,30 +80,31 @@ export class Service {
 		.sort(numberSorter)
 		.reverse();
 
-	constructor(private api: Api, public data: ServiceData) {}
+	public serviceStatus: ServiceStatus[] = [];
+
+	constructor(private api: Api, public data: ServiceData) {
+		this.serviceStatus = Service.getServiceStatus(data.f);
+	}
 
 	get isInProgress() {
-		return this.getServiceStatus().includes(ServiceStatus.IN_PROGRESS);
+		return this.serviceStatus.includes(ServiceStatus.IN_PROGRESS);
 	}
 	get isMileageOverdue() {
-		const serviceStatus = this.getServiceStatus();
 		return (
-			serviceStatus.includes(ServiceStatus.OVERDUE) &&
-			serviceStatus.includes(ServiceStatus.OVERDUE_BY_MILEAGE)
+			this.serviceStatus.includes(ServiceStatus.OVERDUE) &&
+			this.serviceStatus.includes(ServiceStatus.OVERDUE_BY_MILEAGE)
 		);
 	}
 	get isEngineHoursOverdue() {
-		const serviceStatus = this.getServiceStatus();
 		return (
-			serviceStatus.includes(ServiceStatus.OVERDUE) &&
-			serviceStatus.includes(ServiceStatus.OVERDUE_BY_ENGINE_HOURS)
+			this.serviceStatus.includes(ServiceStatus.OVERDUE) &&
+			this.serviceStatus.includes(ServiceStatus.OVERDUE_BY_ENGINE_HOURS)
 		);
 	}
 	get isDaysOverdue() {
-		const serviceStatus = this.getServiceStatus();
 		return (
-			serviceStatus.includes(ServiceStatus.OVERDUE) &&
-			serviceStatus.includes(ServiceStatus.OVERDUE_BY_DAYS)
+			this.serviceStatus.includes(ServiceStatus.OVERDUE) &&
+			this.serviceStatus.includes(ServiceStatus.OVERDUE_BY_DAYS)
 		);
 	}
 
@@ -99,7 +113,7 @@ export class Service {
 	}
 
 	get engineHours() {
-		return this.data.cnm;
+		return this.data.cneh;
 	}
 
 	public getDate(timeZone?: string): moment.Moment | null {
@@ -125,8 +139,8 @@ export class Service {
 			)
 			.then((res) => res.services.map((service) => new Service(api, service)));
 
-	public getServiceStatus = (): ServiceStatus[] => {
-		let flagRemaining = this.data.f;
+	public static getServiceStatus = (flags: number): ServiceStatus[] => {
+		let flagRemaining = flags;
 		const status: ServiceStatus[] = [];
 
 		for (const value of Service.POSSIBLE_FLAG_VALUES) {
