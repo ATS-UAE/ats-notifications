@@ -63,7 +63,7 @@ var OverdueServiceReport = /** @class */ (function () {
                 var row = _a[_i];
                 var mileageOverdue = OverdueServiceReport.formatStringValue(row.mileageOverdue, "km");
                 var engineHoursOverdue = OverdueServiceReport.formatStringValue(row.engineHoursOverdue, "hours");
-                var daysOverdue = OverdueServiceReport.formatStringValue(row.mileage, "days");
+                var daysOverdue = OverdueServiceReport.formatStringValue(row.daysOverdue, "days");
                 var engineHours = OverdueServiceReport.formatStringValue(row.engineHours, "hours");
                 var mileage = OverdueServiceReport.formatStringValue(row.mileage, "km");
                 table.addRow([
