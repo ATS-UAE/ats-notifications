@@ -212,7 +212,7 @@ export class OverdueServiceReport {
 			);
 
 			const daysOverdue = OverdueServiceReport.formatStringValue(
-				row.mileage,
+				row.daysOverdue,
 				"days"
 			);
 
