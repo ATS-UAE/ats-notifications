@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { OverdueServiceReport } from "../utils/OverdueServiceReport";
-import { options, args, mail } from "../config/fleetrun-overdue-email-report";
+import { options, args, mail } from "../config/fleetrun-overdue-report";
 
 if (args.h || args.help) {
 	console.log(`Work in progress...`);
