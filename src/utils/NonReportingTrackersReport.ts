@@ -4,6 +4,12 @@ import { SecurePath, LiveTrackerItem } from "securepath-api";
 import { EmailReport } from "./EmailReport";
 import { HtmlTable } from "./HtmlTable";
 import { JobCard } from "./job-card/JobCard";
+import { TextTable } from "./TextTable";
+import { DatabaseConfig, MailConfig } from "../config/types";
+import {
+	SecurePathConfig,
+	WialonConfig
+} from "../config/non-reporting-trackers-report";
 
 interface TrackerData {
 	vehicle: string;
@@ -17,12 +23,10 @@ interface TrackerData {
 }
 
 interface ResourceCredentials {
-	dbUser: string;
-	dbPass: string;
-	dbHost: string;
-	spUser: string;
-	spPassword: string;
-	wialonToken: string;
+	database: DatabaseConfig;
+	mail?: MailConfig;
+	securepath: SecurePathConfig;
+	wialon: WialonConfig;
 }
 
 interface NonReportingFetchOptions {
@@ -82,7 +86,7 @@ export class NonReportingTrackersReport {
 						jobCards.find((jc) => String(jc.imei) === String(tracker.uid))) ||
 					undefined;
 				if (!tracker.uid) {
-					console.log(`${tracker.nm} has no IMEI`);
+					console.error(`${tracker.nm} has no IMEI`);
 				}
 				acc.push({
 					chassis: jobCard?.chassis || "N/A",
@@ -104,24 +108,24 @@ export class NonReportingTrackersReport {
 		options: NonReportingFetchOptions
 	): Promise<TrackerData[]> => {
 		const sp = await SecurePath.login(
-			credentials.spUser,
-			credentials.spPassword,
+			credentials.securepath.user,
+			credentials.securepath.pass,
 			{ baseUrl: "http://rac.securepath.ae:1024" }
 		);
 		const securepathUnits = await sp.Live.getTrackers();
 		const jobCards = await JobCard.findAll(
 			{
-				database: "atsoperations",
-				host: credentials.dbHost,
-				password: credentials.dbPass,
-				user: credentials.dbUser
+				database: credentials.database.name,
+				host: credentials.database.host,
+				password: credentials.database.pass,
+				user: credentials.database.user
 			},
 			{
 				active: true
 			}
 		);
 		const w = await Wialon.login({
-			token: credentials.wialonToken
+			token: credentials.wialon.token
 		});
 		const wialonUnits = await w.Utils.getUnits({ flags: 1024 + 256 + 1 });
 		const nonReportingTrackers: TrackerData[] = [
@@ -179,16 +183,50 @@ export class NonReportingTrackersReport {
 		return table;
 	};
 
+	public getTextTable = () => {
+		const table = new TextTable();
+		table.addRow([
+			"System",
+			"Client",
+			"IMEI",
+			"Vehicle",
+			"Plate Number",
+			"Chassis",
+			"Days Since Last Report",
+			"Last Report Date"
+		]);
+		this.data.forEach((row) => {
+			table.addRow([
+				row.system,
+				row.client || "N/A",
+				row.imei,
+				row.vehicle,
+				row.plateNumber,
+				row.chassis,
+				row.daysSinceLastReport || "N/A",
+				row.lastReport
+			]);
+		});
+		return table;
+	};
+
+	public printTextTable = () => {
+		const table = this.getTextTable();
+		return table.render();
+	};
+
 	public sendReportByEmail = ({
+		mailConfig,
 		recipients,
 		subject,
 		threshold
 	}: {
+		mailConfig: MailConfig;
 		recipients: string[];
 		subject: string;
 		threshold: number;
 	}) => {
-		const emailReport = new EmailReport();
+		const emailReport = new EmailReport(mailConfig);
 		const currentDate = moment();
 		emailReport.appendBody("<h1>Non Reporting Tracker List.</h1>");
 		emailReport.appendBody(

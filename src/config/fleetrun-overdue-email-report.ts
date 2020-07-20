@@ -1,76 +1,61 @@
 import minimist from "minimist";
+import * as yup from "yup";
+import { MailConfig, DatabaseConfig } from "./types";
 
-interface FleetrunCommandLineArgs {
+export interface FleetRunOverdueEmailReportCommandLineArgs {
 	h?: boolean;
 	help?: boolean;
-	token?: string;
-	recipient?: string | string[];
+	recipient?: string[];
 	subject?: string;
+	// eg. "+04:00"
 	timezone?: string;
+	token?: string;
 	"fleet-id"?: string;
-	"mail-pass"?: string;
-	"mail-user"?: string;
 	"mail-host"?: string;
+	"mail-user"?: string;
+	"mail-pass"?: string;
+	"mail-port"?: string;
 }
 
-interface FleetrunConfig {
-	recipients: string[];
-	fleetId: number;
-	token: string;
-	subject: string;
-	mail: {
-		user: string;
-		password: string;
-		host: string;
-		port: number;
-	};
-	timezone?: string;
-}
+const validator = yup
+	.object()
+	.shape({
+		h: yup.boolean().required().default(false),
+		help: yup.boolean().required().default(false),
+		recipient: yup
+			.array(yup.string().required())
+			.required()
+			.transform((v, ogV) => (typeof ogV === "string" ? [ogV] : ogV)),
+		subject: yup.string().required(),
+		timezone: yup.string(),
+		token: yup.string().required(),
+		"fleet-id": yup.number().required(),
+		"mail-host": yup.string().required(),
+		"mail-user": yup.string().required(),
+		"mail-pass": yup.string().required(),
+		"mail-port": yup.number().required()
+	})
+	.required();
 
-const args = minimist<FleetrunCommandLineArgs>(process.argv);
+const parsedArgs = minimist<FleetRunOverdueEmailReportCommandLineArgs>(
+	process.argv
+);
 
-const getConfig = (): FleetrunConfig => {
-	const recipients =
-		(args.recipient &&
-			(Array.isArray(args.recipient) ? args.recipient : [args.recipient])) ||
-		undefined;
+validator.validateSync(parsedArgs);
 
-	const token = args.token || process.env.FLEETRUN_TOKEN;
-	const fleetId = (args["fleet-id"] && parseInt(args["fleet-id"])) || undefined;
-	const subject = args.subject;
-	const mailUser = args["mail-user"] || process.env.MAIL_USER;
-	const mailPass = args["mail-pass"] || process.env.MAIL_USER;
-	const mailHost = args["mail-host"] || process.env.MAIL_HOST;
-	const mailPort = args.port || process.env.MAIL_PORT || 465;
+export const args = validator.cast(parsedArgs);
 
-	// TODO: provide a better validation where it outputs which exactly is missing from the parameters.
-	// Check if all parameters exist.
-	if (
-		token &&
-		recipients &&
-		fleetId &&
-		subject &&
-		mailUser &&
-		mailPass &&
-		mailHost &&
-		mailPort
-	) {
-		const config: FleetrunConfig = {
-			token,
-			recipients,
-			fleetId,
-			subject,
-			mail: {
-				user: mailUser,
-				password: mailPass,
-				host: mailHost,
-				port: mailPort
-			}
-		};
-		return config;
-	}
-
-	throw new Error("Missing arguments.");
+export const mail: MailConfig = {
+	host: args["mail-host"],
+	pass: args["mail-pass"],
+	port: args["mail-port"],
+	user: args["mail-user"]
 };
 
-export default getConfig();
+export const options = {
+	timezone: args.timezone,
+	recipients: args.recipient,
+	subject: args.subject,
+	token: args.token,
+	fleetId: args["fleet-id"]
+};

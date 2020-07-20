@@ -36,71 +36,32 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-var dotenv_1 = __importDefault(require("dotenv"));
-dotenv_1.default.config();
-var minimist_1 = __importDefault(require("minimist"));
-var NonReportingTrackersReport_1 = require("../utils/NonReportingTrackersReport");
-var args = minimist_1.default(process.argv);
-if (args.h || args.help) {
+var OverdueServiceReport_1 = require("../utils/OverdueServiceReport");
+var fleetrun_overdue_email_report_1 = require("../config/fleetrun-overdue-email-report");
+if (fleetrun_overdue_email_report_1.args.h || fleetrun_overdue_email_report_1.args.help) {
     console.log("Work in progress...");
     process.exit(0);
 }
-if (args["db-user"] &&
-    args["db-host"] &&
-    args["db-pass"] &&
-    args["sp-user"] &&
-    args["sp-password"] &&
-    args["wialon-token"]) {
-    NonReportingTrackersReport_1.NonReportingTrackersReport.create({
-        dbHost: args["db-host"],
-        dbPass: args["db-pass"],
-        dbUser: args["db-user"],
-        spPassword: args["sp-password"],
-        spUser: args["sp-user"],
-        wialonToken: args["wialon-token"]
-    }, {
-        threshold: args.threshold || 5
-    }, args.timezone)
-        .then(function (serviceReport) { return __awaiter(void 0, void 0, void 0, function () {
-        var recipients, sent;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    if (!(args.subject && args.recipient)) return [3 /*break*/, 3];
-                    if (!(serviceReport.data.length > 0)) return [3 /*break*/, 2];
-                    recipients = Array.isArray(args.recipient)
-                        ? args.recipient
-                        : [args.recipient];
-                    return [4 /*yield*/, serviceReport.sendReportByEmail({
-                            subject: args.subject,
-                            recipients: recipients,
-                            threshold: args.threshold || 5
-                        })];
-                case 1:
-                    sent = _a.sent();
-                    console.log(sent);
-                    _a.label = 2;
-                case 2:
-                    process.exit(0);
-                    _a.label = 3;
-                case 3:
-                    console.log("Argument error.");
-                    process.exit(2);
-                    return [2 /*return*/];
-            }
-        });
-    }); })
-        .catch(function (e) {
-        console.log(e);
-        process.exit(2);
+OverdueServiceReport_1.OverdueServiceReport.create(fleetrun_overdue_email_report_1.options.token, fleetrun_overdue_email_report_1.options.fleetId, fleetrun_overdue_email_report_1.options.timezone).then(function (serviceReport) { return __awaiter(void 0, void 0, void 0, function () {
+    var sent;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                if (!(serviceReport.data.length > 0)) return [3 /*break*/, 2];
+                return [4 /*yield*/, serviceReport.sendReportByEmail({
+                        mailConfig: fleetrun_overdue_email_report_1.mail,
+                        subject: fleetrun_overdue_email_report_1.options.subject,
+                        recipients: fleetrun_overdue_email_report_1.options.recipients
+                    })];
+            case 1:
+                sent = _a.sent();
+                console.log(sent);
+                _a.label = 2;
+            case 2:
+                process.exit(0);
+                return [2 /*return*/];
+        }
     });
-}
-else {
-    console.log("Argument error.");
-    process.exit(2);
-}
-//# sourceMappingURL=non-reporting-trackers-email-report.js.map
+}); });
+//# sourceMappingURL=fleetrun-overdue-report.js.map

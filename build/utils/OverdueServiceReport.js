@@ -79,8 +79,8 @@ var OverdueServiceReport = /** @class */ (function () {
             return table;
         };
         this.sendReportByEmail = function (_a) {
-            var recipients = _a.recipients, subject = _a.subject;
-            var emailReport = new EmailReport_1.EmailReport();
+            var mailConfig = _a.mailConfig, recipients = _a.recipients, subject = _a.subject;
+            var emailReport = new EmailReport_1.EmailReport(mailConfig);
             var currentDate = moment_1.default();
             emailReport.appendBody("<h1>Daily service overdue list.</h1>");
             emailReport.appendBody(_this.getHtmlTable());

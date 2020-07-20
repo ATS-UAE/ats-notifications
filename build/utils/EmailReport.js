@@ -14,8 +14,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.EmailReport = void 0;
 var Mailer_1 = require("./Mailer");
 var EmailReport = /** @class */ (function () {
-    function EmailReport() {
+    function EmailReport(config) {
         var _this = this;
+        this.config = config;
         this.body = "";
         this.appendBody = function (data) {
             if (typeof data === "string") {
@@ -26,7 +27,7 @@ var EmailReport = /** @class */ (function () {
             }
         };
         this.send = function (options) {
-            var mailer = Mailer_1.Mailer.getInstance();
+            var mailer = new Mailer_1.Mailer(_this.config);
             return mailer.sendMail(__assign(__assign({}, options), { body: _this.body }));
         };
     }

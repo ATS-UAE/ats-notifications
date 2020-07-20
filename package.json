@@ -5,7 +5,7 @@
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"start": "nodemon",
-		"build": "tsc",
+		"build": "npm run clean && tsc",
 		"build-prod": "tsc --sourcemap false",
 		"clean": "rm -rf ./build",
 		"typecheck": "tsc --noEmit true",
@@ -18,20 +18,22 @@
 		"@types/mysql2": "github:types/mysql2",
 		"@types/node": "^13.9.0",
 		"@types/nodemailer": "^6.4.0",
+		"@types/yup": "^0.29.3",
 		"dotenv": "^8.2.0",
 		"minimist": "^1.2.4",
 		"moment": "^2.24.0",
 		"mysql2": "^2.1.0",
 		"node-wialon": "^0.14.0",
 		"nodemailer": "^6.4.5",
-		"securepath-api": "git+https://github.com/ramilamparo/securepath-api.git"
+		"securepath-api": "git+https://github.com/ramilamparo/securepath-api.git",
+		"yup": "^0.29.1"
 	},
 	"devDependencies": {
 		"nodemon": "^2.0.2",
-		"typescript": "^3.8.3"
+		"typescript": "^3.9.6"
 	},
 	"bin": {
-		"fleetrun-overdue-email-report": "./build/bin/fleetrun-overdue-email-report.js",
-		"non-reporting-trackers-email-report": "./build/bin/non-reporting-trackers-email-report.js"
+		"fleetrun-overdue-report": "./build/bin/fleetrun-overdue-report.js",
+		"non-reporting-trackers-report": "./build/bin/non-reporting-trackers-report.js"
 	}
 }

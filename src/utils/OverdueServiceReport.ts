@@ -2,6 +2,7 @@ import moment from "moment";
 import { Api, Interval, Service, Unit } from "./fleet-run";
 import { EmailReport } from "./EmailReport";
 import { HtmlTable } from "./HtmlTable";
+import { MailConfig } from "../config/types";
 
 interface OverdueServiceData {
 	unit: string;
@@ -237,13 +238,15 @@ export class OverdueServiceReport {
 	};
 
 	public sendReportByEmail = ({
+		mailConfig,
 		recipients,
 		subject
 	}: {
+		mailConfig: MailConfig;
 		recipients: string[];
 		subject: string;
 	}) => {
-		const emailReport = new EmailReport();
+		const emailReport = new EmailReport(mailConfig);
 		const currentDate = moment();
 		emailReport.appendBody("<h1>Daily service overdue list.</h1>");
 		emailReport.appendBody(this.getHtmlTable());

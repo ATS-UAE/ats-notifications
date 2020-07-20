@@ -1,6 +1,6 @@
-import { IRenderableHtml } from "./RenderableHtml";
+import { IRenderable } from "./Renderable";
 
-export class HtmlTable implements IRenderableHtml {
+export class HtmlTable implements IRenderable {
 	public rows: (string | number)[][] = [];
 	constructor(public columns: string[]) {}
 
@@ -12,7 +12,7 @@ export class HtmlTable implements IRenderableHtml {
 		const headersHtml =
 			"<tr>" +
 			this.columns
-				.map(c => `<th style="${this.getRowStyle()}">${c}</th>`)
+				.map((c) => `<th style="${this.getRowStyle()}">${c}</th>`)
 				.join("") +
 			"</tr>";
 		return headersHtml;
@@ -21,9 +21,9 @@ export class HtmlTable implements IRenderableHtml {
 	private renderRowsHtml = () => {
 		const rowsHtml = this.rows
 			.map(
-				r =>
+				(r) =>
 					`<tr>${r
-						.map(r => `<td style="${this.getRowStyle()}">${r}</td>`)
+						.map((r) => `<td style="${this.getRowStyle()}">${r}</td>`)
 						.join("")}</tr>`
 			)
 			.join("");

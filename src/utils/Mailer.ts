@@ -1,6 +1,6 @@
 import nodemailer from "nodemailer";
-import { mail } from "../config";
 import Mail from "nodemailer/lib/mailer";
+import { MailConfig } from "../config/types";
 
 export interface MailSendOptions {
 	to: string[];
@@ -13,24 +13,19 @@ export class Mailer {
 	private mailer: Mail;
 	private static instance: Mailer;
 
-	private constructor() {
+	constructor(config: MailConfig) {
 		this.mailer = nodemailer.createTransport({
-			auth: {
-				user: mail.user,
-				pass: mail.pass
+			options: {
+				auth: {
+					user: config.user,
+					pass: config.pass
+				},
+				port: config.port
 			},
-			port: mail.port,
 			secure: true,
-			host: mail.host
+			host: config.host
 		});
 	}
-
-	public static getInstance = () => {
-		if (!Mailer.instance) {
-			Mailer.instance = new Mailer();
-		}
-		return Mailer.instance;
-	};
 
 	public sendMail = (options: MailSendOptions) => {
 		return new Promise((resolve, reject) => {

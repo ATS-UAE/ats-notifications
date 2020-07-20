@@ -22,42 +22,66 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.options = exports.mail = exports.args = void 0;
+exports.options = exports.wialon = exports.securepath = exports.database = exports.mail = exports.args = void 0;
 var minimist_1 = __importDefault(require("minimist"));
 var yup = __importStar(require("yup"));
 var validator = yup
     .object()
     .shape({
-    h: yup.boolean().required().default(false),
-    help: yup.boolean().required().default(false),
+    h: yup.boolean().default(false),
+    help: yup.boolean().default(false),
     recipient: yup
         .array(yup.string().required())
-        .required()
         .transform(function (v, ogV) { return (typeof ogV === "string" ? [ogV] : ogV); }),
-    subject: yup.string().required(),
+    subject: yup.string(),
     timezone: yup.string(),
-    token: yup.string().required(),
-    "fleet-id": yup.number().required(),
-    "mail-host": yup.string().required(),
-    "mail-user": yup.string().required(),
-    "mail-pass": yup.string().required(),
-    "mail-port": yup.number().required()
+    "db-name": yup.string().required(),
+    "db-user": yup.string().required(),
+    "db-pass": yup.string().required(),
+    "db-host": yup.string().required(),
+    "sp-user": yup.string().required(),
+    "sp-password": yup.string().required(),
+    "wialon-token": yup.string().required(),
+    threshold: yup.number().required().default(7),
+    "mail-host": yup.string(),
+    "mail-user": yup.string(),
+    "mail-pass": yup.string(),
+    "mail-port": yup.number()
 })
     .required();
 var parsedArgs = minimist_1.default(process.argv);
 validator.validateSync(parsedArgs);
 exports.args = validator.cast(parsedArgs);
-exports.mail = {
-    host: exports.args["mail-host"],
-    pass: exports.args["mail-pass"],
-    port: exports.args["mail-port"],
-    user: exports.args["mail-user"]
+exports.mail = null;
+if (exports.args["db-pass"] &&
+    exports.args["mail-host"] &&
+    exports.args["mail-pass"] &&
+    exports.args["mail-port"] &&
+    exports.args["mail-user"]) {
+    exports.mail = {
+        host: exports.args["mail-host"],
+        pass: exports.args["mail-pass"],
+        port: exports.args["mail-port"],
+        user: exports.args["mail-user"]
+    };
+}
+exports.database = {
+    name: exports.args["db-name"],
+    host: exports.args["db-host"],
+    pass: exports.args["db-pass"],
+    user: exports.args["db-user"]
+};
+exports.securepath = {
+    user: exports.args["sp-user"],
+    pass: exports.args["sp-password"]
+};
+exports.wialon = {
+    token: exports.args["wialon-token"]
 };
 exports.options = {
+    threshold: exports.args.threshold,
     timezone: exports.args.timezone,
-    recipients: exports.args.recipient,
-    subject: exports.args.subject,
-    token: exports.args.token,
-    fleetId: exports.args["fleet-id"]
+    recipient: exports.args.recipient,
+    subject: exports.args.subject
 };
-//# sourceMappingURL=fleetrun-overdue-email-report.js.map
+//# sourceMappingURL=non-reporting-trackers-report.js.map

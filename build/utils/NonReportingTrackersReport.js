@@ -53,6 +53,7 @@ var securepath_api_1 = require("securepath-api");
 var EmailReport_1 = require("./EmailReport");
 var HtmlTable_1 = require("./HtmlTable");
 var JobCard_1 = require("./job-card/JobCard");
+var TextTable_1 = require("./TextTable");
 var NonReportingTrackersReport = /** @class */ (function () {
     function NonReportingTrackersReport(data, timezone) {
         var _this = this;
@@ -83,9 +84,39 @@ var NonReportingTrackersReport = /** @class */ (function () {
             });
             return table;
         };
+        this.getTextTable = function () {
+            var table = new TextTable_1.TextTable();
+            table.addRow([
+                "System",
+                "Client",
+                "IMEI",
+                "Vehicle",
+                "Plate Number",
+                "Chassis",
+                "Days Since Last Report",
+                "Last Report Date"
+            ]);
+            _this.data.forEach(function (row) {
+                table.addRow([
+                    row.system,
+                    row.client || "N/A",
+                    row.imei,
+                    row.vehicle,
+                    row.plateNumber,
+                    row.chassis,
+                    row.daysSinceLastReport || "N/A",
+                    row.lastReport
+                ]);
+            });
+            return table;
+        };
+        this.printTextTable = function () {
+            var table = _this.getTextTable();
+            return table.render();
+        };
         this.sendReportByEmail = function (_a) {
-            var recipients = _a.recipients, subject = _a.subject, threshold = _a.threshold;
-            var emailReport = new EmailReport_1.EmailReport();
+            var mailConfig = _a.mailConfig, recipients = _a.recipients, subject = _a.subject, threshold = _a.threshold;
+            var emailReport = new EmailReport_1.EmailReport(mailConfig);
             var currentDate = moment_1.default();
             emailReport.appendBody("<h1>Non Reporting Tracker List.</h1>");
             emailReport.appendBody("<p>Vehicles not reporting for more than " + threshold + " days.</p>");
@@ -137,7 +168,7 @@ var NonReportingTrackersReport = /** @class */ (function () {
                     jobCards.find(function (jc) { return String(jc.imei) === String(tracker.uid); })) ||
                     undefined;
                 if (!tracker.uid) {
-                    console.log(tracker.nm + " has no IMEI");
+                    console.error(tracker.nm + " has no IMEI");
                 }
                 acc.push({
                     chassis: (jobCard === null || jobCard === void 0 ? void 0 : jobCard.chassis) || "N/A",
@@ -157,24 +188,24 @@ var NonReportingTrackersReport = /** @class */ (function () {
         var sp, securepathUnits, jobCards, w, wialonUnits, nonReportingTrackers;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, securepath_api_1.SecurePath.login(credentials.spUser, credentials.spPassword, { baseUrl: "http://rac.securepath.ae:1024" })];
+                case 0: return [4 /*yield*/, securepath_api_1.SecurePath.login(credentials.securepath.user, credentials.securepath.pass, { baseUrl: "http://rac.securepath.ae:1024" })];
                 case 1:
                     sp = _a.sent();
                     return [4 /*yield*/, sp.Live.getTrackers()];
                 case 2:
                     securepathUnits = _a.sent();
                     return [4 /*yield*/, JobCard_1.JobCard.findAll({
-                            database: "atsoperations",
-                            host: credentials.dbHost,
-                            password: credentials.dbPass,
-                            user: credentials.dbUser
+                            database: credentials.database.name,
+                            host: credentials.database.host,
+                            password: credentials.database.pass,
+                            user: credentials.database.user
                         }, {
                             active: true
                         })];
                 case 3:
                     jobCards = _a.sent();
                     return [4 /*yield*/, node_wialon_1.Wialon.login({
-                            token: credentials.wialonToken
+                            token: credentials.wialon.token
                         })];
                 case 4:
                     w = _a.sent();
