@@ -10,7 +10,8 @@ if (args.h || args.help) {
 OverdueServiceReport.create(
 	options.token,
 	options.fleetId,
-	options.timezone
+	options.timezone,
+	options.columns
 ).then(async (serviceReport) => {
 	// Send only if the service report has any pending services.
 	if (serviceReport.data.length > 0) {

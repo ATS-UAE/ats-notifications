@@ -26,13 +26,11 @@ var Mailer = /** @class */ (function () {
             });
         };
         this.mailer = nodemailer_1.default.createTransport({
-            options: {
-                auth: {
-                    user: config.user,
-                    pass: config.pass
-                },
-                port: config.port
+            auth: {
+                user: config.user,
+                pass: config.pass
             },
+            port: config.port,
             secure: true,
             host: config.host
         });

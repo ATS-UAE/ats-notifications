@@ -17,6 +17,12 @@ export interface FleetRunOverdueEmailReportCommandLineArgs {
 	"mail-port"?: string;
 }
 
+export enum ReportColumn {
+	OVERDUE_DAY = "d",
+	OVERDUE_ENGINE_HOURS = "eh",
+	OVERDUE_MILEAGE = "m"
+}
+
 const validator = yup
 	.object()
 	.shape({
@@ -33,7 +39,12 @@ const validator = yup
 		"mail-host": yup.string().required(),
 		"mail-user": yup.string().required(),
 		"mail-pass": yup.string().required(),
-		"mail-port": yup.number().required()
+		"mail-port": yup.number().required(),
+		cols: yup
+			.array(yup.string().oneOf(Object.values(ReportColumn)).required())
+			.required()
+			.transform((v, ogV) => (typeof ogV === "string" ? ogV.split(",") : ogV))
+			.default(Object.values(ReportColumn))
 	})
 	.required();
 
@@ -57,5 +68,6 @@ export const options = {
 	recipients: args.recipient,
 	subject: args.subject,
 	token: args.token,
-	fleetId: args["fleet-id"]
+	fleetId: args["fleet-id"],
+	columns: args.cols
 };

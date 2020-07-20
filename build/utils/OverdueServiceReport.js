@@ -44,37 +44,52 @@ var moment_1 = __importDefault(require("moment"));
 var fleet_run_1 = require("./fleet-run");
 var EmailReport_1 = require("./EmailReport");
 var HtmlTable_1 = require("./HtmlTable");
+var fleetrun_overdue_report_1 = require("../config/fleetrun-overdue-report");
 var OverdueServiceReport = /** @class */ (function () {
-    function OverdueServiceReport(data, timezone) {
+    function OverdueServiceReport(data, options) {
         var _this = this;
         this.data = data;
-        this.timezone = timezone;
-        this.getHtmlTable = function () {
-            var table = new HtmlTable_1.HtmlTable([
+        this.options = options;
+        this.getHtmlTable = function (_a) {
+            var _b = _a.columns, columns = _b === void 0 ? Object.values(fleetrun_overdue_report_1.ReportColumn) : _b;
+            var tableColums = [
                 "Unit name",
                 "Service name",
-                "Mileage counter",
-                "Engine hours counter",
-                "Mileage overdue",
-                "Days overdue",
-                "Engine hours overdue"
-            ]);
-            for (var _i = 0, _a = _this.data; _i < _a.length; _i++) {
-                var row = _a[_i];
-                var mileageOverdue = OverdueServiceReport.formatStringValue(row.mileageOverdue, "km");
-                var engineHoursOverdue = OverdueServiceReport.formatStringValue(row.engineHoursOverdue, "hours");
-                var daysOverdue = OverdueServiceReport.formatStringValue(row.daysOverdue, "days");
-                var engineHours = OverdueServiceReport.formatStringValue(row.engineHours, "hours");
-                var mileage = OverdueServiceReport.formatStringValue(row.mileage, "km");
-                table.addRow([
+                "Mileage counter (Km)",
+                "Engine hours counter (Hour)"
+            ];
+            var includeMilageColumn = columns.includes(fleetrun_overdue_report_1.ReportColumn.OVERDUE_MILEAGE);
+            var includeDaysColumn = columns.includes(fleetrun_overdue_report_1.ReportColumn.OVERDUE_DAY);
+            var includeEngineHoursColumn = columns.includes(fleetrun_overdue_report_1.ReportColumn.OVERDUE_ENGINE_HOURS);
+            if (includeMilageColumn) {
+                tableColums.push("Mileage overdue (Km)");
+            }
+            if (includeDaysColumn) {
+                tableColums.push("Days overdue (Days)");
+            }
+            if (includeEngineHoursColumn) {
+                tableColums.push("Engine hours overdue (Hours)");
+            }
+            var table = new HtmlTable_1.HtmlTable(tableColums);
+            for (var _i = 0, _c = _this.data; _i < _c.length; _i++) {
+                var row = _c[_i];
+                var columnValues = [
                     row.unit,
                     row.serviceName,
-                    mileage,
-                    engineHours,
-                    mileageOverdue,
-                    daysOverdue,
-                    engineHoursOverdue
-                ]);
+                    row.mileage || "N/A",
+                    row.engineHours || "N/A"
+                ];
+                var mileage = OverdueServiceReport.formatStringValue(row.mileage, "km");
+                if (includeMilageColumn) {
+                    columnValues.push(row.mileageOverdue || "N/A");
+                }
+                if (includeDaysColumn) {
+                    columnValues.push(row.daysOverdue || "N/A");
+                }
+                if (includeEngineHoursColumn) {
+                    columnValues.push(row.engineHoursOverdue || "N/A");
+                }
+                table.addRow(columnValues);
             }
             return table;
         };
@@ -83,9 +98,9 @@ var OverdueServiceReport = /** @class */ (function () {
             var emailReport = new EmailReport_1.EmailReport(mailConfig);
             var currentDate = moment_1.default();
             emailReport.appendBody("<h1>Daily service overdue list.</h1>");
-            emailReport.appendBody(_this.getHtmlTable());
-            if (_this.timezone) {
-                emailReport.appendBody("<p>Sent " + currentDate.utcOffset(_this.timezone).format() + "</p>");
+            emailReport.appendBody(_this.getHtmlTable({ columns: _this.options.columns }));
+            if (_this.options.timezone) {
+                emailReport.appendBody("<p>Sent " + currentDate.utcOffset(_this.options.timezone).format() + "</p>");
             }
             else {
                 emailReport.appendBody("<p>Sent " + currentDate.format() + "</p>");
@@ -201,7 +216,7 @@ var OverdueServiceReport = /** @class */ (function () {
         }, []);
         return overdueServiceReportData;
     };
-    OverdueServiceReport.create = function (token, fleetId, timezone) { return __awaiter(void 0, void 0, void 0, function () {
+    OverdueServiceReport.create = function (token, fleetId, timezone, columns) { return __awaiter(void 0, void 0, void 0, function () {
         var reportData, overdueServices;
         return __generator(this, function (_a) {
             switch (_a.label) {
@@ -209,7 +224,7 @@ var OverdueServiceReport = /** @class */ (function () {
                 case 1:
                     reportData = _a.sent();
                     overdueServices = OverdueServiceReport.composeOverdueServiceData(reportData, timezone);
-                    return [2 /*return*/, new OverdueServiceReport(overdueServices, timezone)];
+                    return [2 /*return*/, new OverdueServiceReport(overdueServices, { timezone: timezone, columns: columns })];
             }
         });
     }); };

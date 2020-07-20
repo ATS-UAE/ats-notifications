@@ -38,21 +38,21 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var OverdueServiceReport_1 = require("../utils/OverdueServiceReport");
-var fleetrun_overdue_email_report_1 = require("../config/fleetrun-overdue-email-report");
-if (fleetrun_overdue_email_report_1.args.h || fleetrun_overdue_email_report_1.args.help) {
+var fleetrun_overdue_report_1 = require("../config/fleetrun-overdue-report");
+if (fleetrun_overdue_report_1.args.h || fleetrun_overdue_report_1.args.help) {
     console.log("Work in progress...");
     process.exit(0);
 }
-OverdueServiceReport_1.OverdueServiceReport.create(fleetrun_overdue_email_report_1.options.token, fleetrun_overdue_email_report_1.options.fleetId, fleetrun_overdue_email_report_1.options.timezone).then(function (serviceReport) { return __awaiter(void 0, void 0, void 0, function () {
+OverdueServiceReport_1.OverdueServiceReport.create(fleetrun_overdue_report_1.options.token, fleetrun_overdue_report_1.options.fleetId, fleetrun_overdue_report_1.options.timezone, fleetrun_overdue_report_1.options.columns).then(function (serviceReport) { return __awaiter(void 0, void 0, void 0, function () {
     var sent;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
                 if (!(serviceReport.data.length > 0)) return [3 /*break*/, 2];
                 return [4 /*yield*/, serviceReport.sendReportByEmail({
-                        mailConfig: fleetrun_overdue_email_report_1.mail,
-                        subject: fleetrun_overdue_email_report_1.options.subject,
-                        recipients: fleetrun_overdue_email_report_1.options.recipients
+                        mailConfig: fleetrun_overdue_report_1.mail,
+                        subject: fleetrun_overdue_report_1.options.subject,
+                        recipients: fleetrun_overdue_report_1.options.recipients
                     })];
             case 1:
                 sent = _a.sent();

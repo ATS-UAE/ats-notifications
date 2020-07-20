@@ -22,9 +22,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.options = exports.mail = exports.args = void 0;
+exports.options = exports.mail = exports.args = exports.ReportColumn = void 0;
 var minimist_1 = __importDefault(require("minimist"));
 var yup = __importStar(require("yup"));
+var ReportColumn;
+(function (ReportColumn) {
+    ReportColumn["OVERDUE_DAY"] = "d";
+    ReportColumn["OVERDUE_ENGINE_HOURS"] = "eh";
+    ReportColumn["OVERDUE_MILEAGE"] = "m";
+})(ReportColumn = exports.ReportColumn || (exports.ReportColumn = {}));
 var validator = yup
     .object()
     .shape({
@@ -41,7 +47,12 @@ var validator = yup
     "mail-host": yup.string().required(),
     "mail-user": yup.string().required(),
     "mail-pass": yup.string().required(),
-    "mail-port": yup.number().required()
+    "mail-port": yup.number().required(),
+    cols: yup
+        .array(yup.string().oneOf(Object.values(ReportColumn)).required())
+        .required()
+        .transform(function (v, ogV) { return (typeof ogV === "string" ? ogV.split(",") : ogV); })
+        .default(Object.values(ReportColumn))
 })
     .required();
 var parsedArgs = minimist_1.default(process.argv);
@@ -58,6 +69,7 @@ exports.options = {
     recipients: exports.args.recipient,
     subject: exports.args.subject,
     token: exports.args.token,
-    fleetId: exports.args["fleet-id"]
+    fleetId: exports.args["fleet-id"],
+    columns: exports.args.cols
 };
-//# sourceMappingURL=fleetrun-overdue-email-report.js.map
+//# sourceMappingURL=fleetrun-overdue-report.js.map

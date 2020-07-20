@@ -3,6 +3,7 @@ import { Api, Interval, Service, Unit } from "./fleet-run";
 import { EmailReport } from "./EmailReport";
 import { HtmlTable } from "./HtmlTable";
 import { MailConfig } from "../config/types";
+import { ReportColumn } from "../config/fleetrun-overdue-report";
 
 interface OverdueServiceData {
 	unit: string;
@@ -29,7 +30,10 @@ interface Overdues {
 export class OverdueServiceReport {
 	private constructor(
 		public data: Array<OverdueServiceData>,
-		private timezone?: string
+		private options: {
+			timezone?: string;
+			columns?: ReportColumn[];
+		}
 	) {}
 
 	private static getOverdues = (
@@ -172,7 +176,8 @@ export class OverdueServiceReport {
 	public static create = async (
 		token: string,
 		fleetId: number,
-		timezone?: string
+		timezone?: string,
+		columns?: ReportColumn[]
 	): Promise<OverdueServiceReport> => {
 		const reportData = await OverdueServiceReport.fetchReportData(token, fleetId);
 
@@ -181,7 +186,7 @@ export class OverdueServiceReport {
 			timezone
 		);
 
-		return new OverdueServiceReport(overdueServices, timezone);
+		return new OverdueServiceReport(overdueServices, { timezone, columns });
 	};
 
 	private static formatStringValue = (
@@ -191,48 +196,52 @@ export class OverdueServiceReport {
 		return typeof value === "number" ? `${value} ${append}` : "N/A";
 	};
 
-	private getHtmlTable = () => {
-		const table = new HtmlTable([
+	private getHtmlTable = ({
+		columns = Object.values(ReportColumn)
+	}: {
+		columns?: ReportColumn[];
+	}) => {
+		const tableColums = [
 			"Unit name",
 			"Service name",
-			"Mileage counter",
-			"Engine hours counter",
-			"Mileage overdue",
-			"Days overdue",
-			"Engine hours overdue"
-		]);
+			"Mileage counter (Km)",
+			"Engine hours counter (Hour)"
+		];
+		const includeMilageColumn = columns.includes(ReportColumn.OVERDUE_MILEAGE);
+		const includeDaysColumn = columns.includes(ReportColumn.OVERDUE_DAY);
+		const includeEngineHoursColumn = columns.includes(
+			ReportColumn.OVERDUE_ENGINE_HOURS
+		);
+		if (includeMilageColumn) {
+			tableColums.push("Mileage overdue (Km)");
+		}
+		if (includeDaysColumn) {
+			tableColums.push("Days overdue (Days)");
+		}
+		if (includeEngineHoursColumn) {
+			tableColums.push("Engine hours overdue (Hours)");
+		}
+		let table = new HtmlTable(tableColums);
 		for (const row of this.data) {
-			const mileageOverdue = OverdueServiceReport.formatStringValue(
-				row.mileageOverdue,
-				"km"
-			);
-
-			const engineHoursOverdue = OverdueServiceReport.formatStringValue(
-				row.engineHoursOverdue,
-				"hours"
-			);
-
-			const daysOverdue = OverdueServiceReport.formatStringValue(
-				row.daysOverdue,
-				"days"
-			);
-
-			const engineHours = OverdueServiceReport.formatStringValue(
-				row.engineHours,
-				"hours"
-			);
-
-			const mileage = OverdueServiceReport.formatStringValue(row.mileage, "km");
-
-			table.addRow([
+			const columnValues = [
 				row.unit,
 				row.serviceName,
-				mileage,
-				engineHours,
-				mileageOverdue,
-				daysOverdue,
-				engineHoursOverdue
-			]);
+				row.mileage || "N/A",
+				row.engineHours || "N/A"
+			];
+
+			const mileage = OverdueServiceReport.formatStringValue(row.mileage, "km");
+			if (includeMilageColumn) {
+				columnValues.push(row.mileageOverdue || "N/A");
+			}
+			if (includeDaysColumn) {
+				columnValues.push(row.daysOverdue || "N/A");
+			}
+			if (includeEngineHoursColumn) {
+				columnValues.push(row.engineHoursOverdue || "N/A");
+			}
+
+			table.addRow(columnValues);
 		}
 		return table;
 	};
@@ -249,10 +258,10 @@ export class OverdueServiceReport {
 		const emailReport = new EmailReport(mailConfig);
 		const currentDate = moment();
 		emailReport.appendBody("<h1>Daily service overdue list.</h1>");
-		emailReport.appendBody(this.getHtmlTable());
-		if (this.timezone) {
+		emailReport.appendBody(this.getHtmlTable({ columns: this.options.columns }));
+		if (this.options.timezone) {
 			emailReport.appendBody(
-				`<p>Sent ${currentDate.utcOffset(this.timezone).format()}</p>`
+				`<p>Sent ${currentDate.utcOffset(this.options.timezone).format()}</p>`
 			);
 		} else {
 			emailReport.appendBody(`<p>Sent ${currentDate.format()}</p>`);
