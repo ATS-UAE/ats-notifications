@@ -15,13 +15,11 @@ export class Mailer {
 
 	constructor(config: MailConfig) {
 		this.mailer = nodemailer.createTransport({
-			options: {
-				auth: {
-					user: config.user,
-					pass: config.pass
-				},
-				port: config.port
+			auth: {
+				user: config.user,
+				pass: config.pass
 			},
+			port: config.port,
 			secure: true,
 			host: config.host
 		});
