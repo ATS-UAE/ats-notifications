@@ -15,10 +15,12 @@ OverdueServiceReport.create(
 ).then(async (serviceReport) => {
 	// Send only if the service report has any pending services.
 	if (serviceReport.data.length > 0) {
+		const html = serviceReport.getServiceOverdueHtmlTable();
 		const sent = await serviceReport.sendReportByEmail({
 			mailConfig: mail,
 			subject: options.subject,
-			recipients: options.recipients
+			recipients: options.recipients,
+			html
 		});
 		console.log(sent);
 	}

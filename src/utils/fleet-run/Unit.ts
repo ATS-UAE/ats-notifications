@@ -28,6 +28,10 @@ export class Unit {
 		return this.data.cneh;
 	}
 
+	get unitName() {
+		return this.data.n;
+	}
+
 	public static getAll = (api: Api, fleet: Fleet | number) =>
 		api
 			.runApi<{ units: UnitData[] }>(

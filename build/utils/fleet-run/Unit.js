@@ -20,6 +20,13 @@ var Unit = /** @class */ (function () {
         enumerable: false,
         configurable: true
     });
+    Object.defineProperty(Unit.prototype, "unitName", {
+        get: function () {
+            return this.data.n;
+        },
+        enumerable: false,
+        configurable: true
+    });
     Unit.getAll = function (api, fleet) {
         return api
             .runApi("/fleets/" + (typeof fleet === "number" ? fleet : fleet.data.id) + "/units", "GET")

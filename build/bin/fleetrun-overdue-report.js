@@ -44,15 +44,17 @@ if (fleetrun_overdue_report_1.args.h || fleetrun_overdue_report_1.args.help) {
     process.exit(0);
 }
 OverdueServiceReport_1.OverdueServiceReport.create(fleetrun_overdue_report_1.options.token, fleetrun_overdue_report_1.options.fleetId, fleetrun_overdue_report_1.options.timezone, fleetrun_overdue_report_1.options.columns).then(function (serviceReport) { return __awaiter(void 0, void 0, void 0, function () {
-    var sent;
+    var html, sent;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
                 if (!(serviceReport.data.length > 0)) return [3 /*break*/, 2];
+                html = serviceReport.getServiceOverdueHtmlTable();
                 return [4 /*yield*/, serviceReport.sendReportByEmail({
                         mailConfig: fleetrun_overdue_report_1.mail,
                         subject: fleetrun_overdue_report_1.options.subject,
-                        recipients: fleetrun_overdue_report_1.options.recipients
+                        recipients: fleetrun_overdue_report_1.options.recipients,
+                        html: html
                     })];
             case 1:
                 sent = _a.sent();

@@ -1,4 +1,5 @@
-import moment from "moment";
+import { differenceInDays, sub, formatISO } from "date-fns";
+import { utcToZonedTime } from "date-fns-tz";
 import { Api, Interval, Service, Unit } from "./fleet-run";
 import { EmailReport } from "./EmailReport";
 import { HtmlTable } from "./HtmlTable";
@@ -9,10 +10,13 @@ interface OverdueServiceData {
 	unit: string;
 	serviceName: string;
 	mileage: number | null;
+	mileageFrequency: number | null;
 	engineHours: number | null;
 	mileageOverdue: number | null;
 	daysOverdue: number | null;
+	daysFrequency: number | null;
 	engineHoursOverdue: number | null;
+	engineHoursFrequency: number | null;
 }
 
 interface ReportData {
@@ -28,13 +32,24 @@ interface Overdues {
 }
 
 export class OverdueServiceReport {
+	public data: Array<OverdueServiceData>;
+	private options: {
+		timezone: string;
+		columns: ReportColumn[];
+	};
 	private constructor(
-		public data: Array<OverdueServiceData>,
-		private options: {
-			timezone?: string;
+		data: Array<OverdueServiceData>,
+		options: {
+			timezone: string;
 			columns?: ReportColumn[];
 		}
-	) {}
+	) {
+		this.data = data;
+		this.options = {
+			timezone: options.timezone,
+			columns: options.columns || Object.values(ReportColumn)
+		};
+	}
 
 	private static getOverdues = (
 		{
@@ -64,7 +79,7 @@ export class OverdueServiceReport {
 		if (isDaysOverdue) {
 			const serviceDate = service.getDate(timezone);
 			overdues.daysOverdue =
-				(serviceDate && moment().diff(serviceDate, "days")) || null;
+				(serviceDate && differenceInDays(new Date(), serviceDate)) || null;
 		}
 		if (isEngineHoursOverdue) {
 			if (service.engineHours) {
@@ -111,14 +126,23 @@ export class OverdueServiceReport {
 		);
 
 		if (overdues) {
+			const { unit, service, interval } = reportData;
+			const { unitName, mileage, engineHours } = unit;
+
+			const { serviceName } = service;
+			const { mileageFrequency, engineHoursFrequency, daysFrequency } = interval;
+
 			const message: OverdueServiceData = {
-				unit: reportData.unit.data.n,
-				mileage: reportData.unit.mileage,
-				engineHours: reportData.unit.engineHours,
-				serviceName: reportData.service.data.n,
+				unit: unitName,
+				mileage: mileage,
+				engineHours: engineHours,
+				serviceName: serviceName,
 				mileageOverdue: OverdueServiceReport.getOverdueMessage(
 					overdues.mileageOverdue
 				),
+				mileageFrequency,
+				daysFrequency,
+				engineHoursFrequency,
 				daysOverdue: OverdueServiceReport.getOverdueMessage(overdues.daysOverdue),
 				engineHoursOverdue: OverdueServiceReport.getOverdueMessage(
 					overdues.engineHoursOverdue
@@ -176,7 +200,7 @@ export class OverdueServiceReport {
 	public static create = async (
 		token: string,
 		fleetId: number,
-		timezone?: string,
+		timezone: string,
 		columns?: ReportColumn[]
 	): Promise<OverdueServiceReport> => {
 		const reportData = await OverdueServiceReport.fetchReportData(token, fleetId);
@@ -189,27 +213,20 @@ export class OverdueServiceReport {
 		return new OverdueServiceReport(overdueServices, { timezone, columns });
 	};
 
-	private static formatStringValue = (
-		value: number | null,
-		append: string
-	): string => {
-		return typeof value === "number" ? `${value} ${append}` : "N/A";
-	};
-
-	private getHtmlTable = ({
-		columns = Object.values(ReportColumn)
-	}: {
-		columns?: ReportColumn[];
-	}) => {
+	public getFleetRunOverdueHtmlTable = () => {
 		const tableColums = [
 			"Unit name",
 			"Service name",
 			"Mileage counter (Km)",
 			"Engine hours counter (Hour)"
 		];
-		const includeMilageColumn = columns.includes(ReportColumn.OVERDUE_MILEAGE);
-		const includeDaysColumn = columns.includes(ReportColumn.OVERDUE_DAY);
-		const includeEngineHoursColumn = columns.includes(
+		const includeMilageColumn = this.options.columns.includes(
+			ReportColumn.OVERDUE_MILEAGE
+		);
+		const includeDaysColumn = this.options.columns.includes(
+			ReportColumn.OVERDUE_DAY
+		);
+		const includeEngineHoursColumn = this.options.columns.includes(
 			ReportColumn.OVERDUE_ENGINE_HOURS
 		);
 		if (includeMilageColumn) {
@@ -230,7 +247,6 @@ export class OverdueServiceReport {
 				row.engineHours || "N/A"
 			];
 
-			const mileage = OverdueServiceReport.formatStringValue(row.mileage, "km");
 			if (includeMilageColumn) {
 				columnValues.push(row.mileageOverdue || "N/A");
 			}
@@ -246,25 +262,102 @@ export class OverdueServiceReport {
 		return table;
 	};
 
+	public getServiceOverdueHtmlTable = (): HtmlTable => {
+		const table = new HtmlTable([
+			"Unit",
+			"Service",
+			"Unit",
+			"Frequency",
+			"Current Reading",
+			"Last Service",
+			"Overdue"
+		]);
+
+		const includeMilageColumn = this.options.columns.includes(
+			ReportColumn.OVERDUE_MILEAGE
+		);
+		const includeDaysColumn = this.options.columns.includes(
+			ReportColumn.OVERDUE_DAY
+		);
+		const includeEngineHoursColumn = this.options.columns.includes(
+			ReportColumn.OVERDUE_ENGINE_HOURS
+		);
+
+		this.data.forEach((service) => {
+			if (includeMilageColumn && service.mileageOverdue !== null) {
+				const lastService = service.mileage
+					? service.mileage -
+					  (service.mileageOverdue + (service.mileageFrequency ?? 0))
+					: "";
+				table.addRow([
+					service.unit,
+					service.serviceName,
+					"Km",
+					service.mileageFrequency || "",
+					service.mileage || "",
+					lastService,
+					service.mileageOverdue
+				]);
+			}
+			if (includeDaysColumn && service.daysOverdue !== null) {
+				const lastService = formatISO(
+					sub(new Date(), {
+						days: service.daysOverdue + (service.daysFrequency ?? 0)
+					})
+				);
+				table.addRow([
+					service.unit,
+					service.serviceName,
+					"Day",
+					service.daysFrequency || "",
+					"",
+					lastService,
+					service.daysOverdue
+				]);
+			}
+			if (includeEngineHoursColumn && service.engineHoursOverdue !== null) {
+				const lastService = service.engineHours
+					? service.engineHours -
+					  (service.engineHoursOverdue + (service.engineHoursFrequency ?? 0))
+					: "";
+				table.addRow([
+					service.unit,
+					service.serviceName,
+					"Hr",
+					service.engineHoursFrequency || "",
+					service.engineHours || "",
+					lastService,
+					service.engineHoursOverdue
+				]);
+			}
+		});
+
+		return table;
+	};
+
 	public sendReportByEmail = ({
 		mailConfig,
 		recipients,
-		subject
+		subject,
+		html
 	}: {
 		mailConfig: MailConfig;
 		recipients: string[];
 		subject: string;
+		html: HtmlTable;
 	}) => {
 		const emailReport = new EmailReport(mailConfig);
-		const currentDate = moment();
+		const currentDate = new Date();
 		emailReport.appendBody("<h1>Daily service overdue list.</h1>");
-		emailReport.appendBody(this.getHtmlTable({ columns: this.options.columns }));
+		emailReport.appendBody(html);
 		if (this.options.timezone) {
 			emailReport.appendBody(
-				`<p>Sent ${currentDate.utcOffset(this.options.timezone).format()}</p>`
+				`<p>Sent ${formatISO(
+					utcToZonedTime(currentDate, this.options.timezone)
+				)}</p>`
 			);
 		} else {
-			emailReport.appendBody(`<p>Sent ${currentDate.format()}</p>`);
+			emailReport.appendBody(`<p>Sent ${formatISO(currentDate)}</p>`);
 		}
 
 		return emailReport.send({

@@ -1,10 +1,8 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Service = exports.ServiceStatus = void 0;
-var moment_1 = __importDefault(require("moment"));
+var date_fns_1 = require("date-fns");
+var date_fns_tz_1 = require("date-fns-tz");
 var ServiceStatus;
 (function (ServiceStatus) {
     ServiceStatus[ServiceStatus["NEW"] = 0] = "NEW";
@@ -34,6 +32,13 @@ var Service = /** @class */ (function () {
         this.serviceStatus = [];
         this.serviceStatus = Service.getServiceStatus(data.f);
     }
+    Object.defineProperty(Service.prototype, "serviceName", {
+        get: function () {
+            return this.data.n;
+        },
+        enumerable: false,
+        configurable: true
+    });
     Object.defineProperty(Service.prototype, "isInProgress", {
         get: function () {
             return this.serviceStatus.includes(ServiceStatus.IN_PROGRESS);
@@ -79,17 +84,19 @@ var Service = /** @class */ (function () {
         enumerable: false,
         configurable: true
     });
-    Service.prototype.getDate = function (timeZone) {
+    Service.prototype.getDate = function (timezone) {
         var date = [this.data.sdt, "YYYY-MM-DD"];
         var time = [this.data.stm, "HH:mm:ss"];
-        var parsedDate = moment_1.default(date[0] + time[0], date[1] + time[1]);
-        if (timeZone) {
-            return parsedDate.utcOffset(timeZone);
+        try {
+            var parsedDate = date_fns_1.parse(date[0] + time[0], date[1] + time[1], new Date());
+            if (timezone) {
+                return date_fns_tz_1.utcToZonedTime(parsedDate, timezone);
+            }
+            return parsedDate;
         }
-        if (!parsedDate.isValid) {
+        catch (e) {
             return null;
         }
-        return parsedDate;
     };
     /** The values of ServiceStatus enum stored in an array. */
     Service.POSSIBLE_FLAG_VALUES = Object.keys(ServiceStatus)

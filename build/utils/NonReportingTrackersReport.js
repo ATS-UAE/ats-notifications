@@ -42,12 +42,10 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             r[k] = a[j];
     return r;
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.NonReportingTrackersReport = void 0;
-var moment_1 = __importDefault(require("moment"));
+var date_fns_1 = require("date-fns");
+var date_fns_tz_1 = require("date-fns-tz");
 var node_wialon_1 = require("node-wialon");
 var securepath_api_1 = require("securepath-api");
 var EmailReport_1 = require("./EmailReport");
@@ -117,15 +115,15 @@ var NonReportingTrackersReport = /** @class */ (function () {
         this.sendReportByEmail = function (_a) {
             var mailConfig = _a.mailConfig, recipients = _a.recipients, subject = _a.subject, threshold = _a.threshold;
             var emailReport = new EmailReport_1.EmailReport(mailConfig);
-            var currentDate = moment_1.default();
+            var currentDate = new Date();
             emailReport.appendBody("<h1>Non Reporting Tracker List.</h1>");
             emailReport.appendBody("<p>Vehicles not reporting for more than " + threshold + " days.</p>");
             emailReport.appendBody(_this.getHtmlTable());
             if (_this.timezone) {
-                emailReport.appendBody("<p>Sent " + currentDate.utcOffset(_this.timezone).format() + "</p>");
+                emailReport.appendBody("<p>Sent " + date_fns_1.formatISO(date_fns_tz_1.utcToZonedTime(currentDate, _this.timezone)) + "</p>");
             }
             else {
-                emailReport.appendBody("<p>Sent " + currentDate.format() + "</p>");
+                emailReport.appendBody("<p>Sent " + date_fns_1.formatISO(currentDate) + "</p>");
             }
             return emailReport.send({
                 to: recipients,
@@ -136,9 +134,9 @@ var NonReportingTrackersReport = /** @class */ (function () {
     }
     NonReportingTrackersReport.getNonReportingSecurepath = function (jobCards, trackers, threshold) {
         return trackers.reduce(function (acc, tracker) {
-            var lastReport = tracker.timestamp && moment_1.default(tracker.timestamp, "X");
+            var lastReport = tracker.timestamp && date_fns_1.parse(tracker.timestamp.toString(), "t", new Date());
             var daysSinceLastReport = lastReport
-                ? moment_1.default().diff(lastReport, "days")
+                ? date_fns_1.differenceInDays(new Date(), lastReport)
                 : null;
             if (daysSinceLastReport === null || daysSinceLastReport >= threshold) {
                 var jobCard = jobCards.find(function (jc) { return String(jc.imei) === String(tracker.imei); });
@@ -147,7 +145,7 @@ var NonReportingTrackersReport = /** @class */ (function () {
                     client: (jobCard === null || jobCard === void 0 ? void 0 : jobCard.client) || "N/A",
                     daysSinceLastReport: daysSinceLastReport,
                     imei: tracker.imei,
-                    lastReport: (lastReport && lastReport.format()) || "N/A",
+                    lastReport: (lastReport && date_fns_1.formatISO(lastReport)) || "N/A",
                     plateNumber: (jobCard === null || jobCard === void 0 ? void 0 : jobCard.plateNo) || "N/A",
                     vehicle: (jobCard === null || jobCard === void 0 ? void 0 : jobCard.vehicle) || "N/A",
                     system: "SecurePath"
@@ -159,9 +157,10 @@ var NonReportingTrackersReport = /** @class */ (function () {
     NonReportingTrackersReport.getNonReportingWialon = function (jobCards, trackers, threshold) {
         return trackers.items.reduce(function (acc, tracker) {
             var _a;
-            var lastReport = (((_a = tracker.lmsg) === null || _a === void 0 ? void 0 : _a.t) && moment_1.default(tracker.lmsg.t, "X")) || undefined;
+            var lastReport = (((_a = tracker.lmsg) === null || _a === void 0 ? void 0 : _a.t) && date_fns_1.parse(tracker.lmsg.t.toString(), "t", new Date())) ||
+                undefined;
             var daysSinceLastReport = lastReport
-                ? moment_1.default().diff(lastReport, "days")
+                ? date_fns_1.differenceInDays(new Date(), lastReport)
                 : null;
             if (daysSinceLastReport === null || daysSinceLastReport >= threshold) {
                 var jobCard = (tracker.uid &&
@@ -175,7 +174,7 @@ var NonReportingTrackersReport = /** @class */ (function () {
                     client: (jobCard === null || jobCard === void 0 ? void 0 : jobCard.client) || "N/A",
                     daysSinceLastReport: daysSinceLastReport,
                     imei: tracker.uid || tracker.nm || "N/A",
-                    lastReport: (lastReport && lastReport.format()) || "N/A",
+                    lastReport: (lastReport && date_fns_1.formatISO(lastReport)) || "N/A",
                     plateNumber: (jobCard === null || jobCard === void 0 ? void 0 : jobCard.plateNo) || "N/A",
                     vehicle: (jobCard === null || jobCard === void 0 ? void 0 : jobCard.vehicle) || "N/A",
                     system: "Wialon"

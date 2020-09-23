@@ -1,4 +1,5 @@
-import moment from "moment";
+import { parse, differenceInDays, formatISO } from "date-fns";
+import { utcToZonedTime } from "date-fns-tz";
 import { Wialon, CoreSearchItemsResponse } from "node-wialon";
 import { SecurePath, LiveTrackerItem } from "securepath-api";
 import { EmailReport } from "./EmailReport";
@@ -46,9 +47,10 @@ export class NonReportingTrackersReport {
 		threshold: number
 	): TrackerData[] => {
 		return trackers.reduce<TrackerData[]>((acc, tracker) => {
-			const lastReport = tracker.timestamp && moment(tracker.timestamp, "X");
+			const lastReport =
+				tracker.timestamp && parse(tracker.timestamp.toString(), "t", new Date());
 			const daysSinceLastReport = lastReport
-				? moment().diff(lastReport, "days")
+				? differenceInDays(new Date(), lastReport)
 				: null;
 			if (daysSinceLastReport === null || daysSinceLastReport >= threshold) {
 				const jobCard = jobCards.find(
@@ -59,7 +61,7 @@ export class NonReportingTrackersReport {
 					client: jobCard?.client || "N/A",
 					daysSinceLastReport,
 					imei: tracker.imei,
-					lastReport: (lastReport && lastReport.format()) || "N/A",
+					lastReport: (lastReport && formatISO(lastReport)) || "N/A",
 					plateNumber: jobCard?.plateNo || "N/A",
 					vehicle: jobCard?.vehicle || "N/A",
 					system: "SecurePath"
@@ -76,9 +78,10 @@ export class NonReportingTrackersReport {
 	): TrackerData[] => {
 		return trackers.items.reduce<TrackerData[]>((acc, tracker) => {
 			const lastReport =
-				(tracker.lmsg?.t && moment(tracker.lmsg.t, "X")) || undefined;
+				(tracker.lmsg?.t && parse(tracker.lmsg.t.toString(), "t", new Date())) ||
+				undefined;
 			const daysSinceLastReport = lastReport
-				? moment().diff(lastReport, "days")
+				? differenceInDays(new Date(), lastReport)
 				: null;
 			if (daysSinceLastReport === null || daysSinceLastReport >= threshold) {
 				const jobCard =
@@ -93,7 +96,7 @@ export class NonReportingTrackersReport {
 					client: jobCard?.client || "N/A",
 					daysSinceLastReport,
 					imei: tracker.uid || tracker.nm || "N/A",
-					lastReport: (lastReport && lastReport.format()) || "N/A",
+					lastReport: (lastReport && formatISO(lastReport)) || "N/A",
 					plateNumber: jobCard?.plateNo || "N/A",
 					vehicle: jobCard?.vehicle || "N/A",
 					system: "Wialon"
@@ -227,7 +230,7 @@ export class NonReportingTrackersReport {
 		threshold: number;
 	}) => {
 		const emailReport = new EmailReport(mailConfig);
-		const currentDate = moment();
+		const currentDate = new Date();
 		emailReport.appendBody("<h1>Non Reporting Tracker List.</h1>");
 		emailReport.appendBody(
 			`<p>Vehicles not reporting for more than ${threshold} days.</p>`
@@ -235,10 +238,10 @@ export class NonReportingTrackersReport {
 		emailReport.appendBody(this.getHtmlTable());
 		if (this.timezone) {
 			emailReport.appendBody(
-				`<p>Sent ${currentDate.utcOffset(this.timezone).format()}</p>`
+				`<p>Sent ${formatISO(utcToZonedTime(currentDate, this.timezone))}</p>`
 			);
 		} else {
-			emailReport.appendBody(`<p>Sent ${currentDate.format()}</p>`);
+			emailReport.appendBody(`<p>Sent ${formatISO(currentDate)}</p>`);
 		}
 
 		return emailReport.send({

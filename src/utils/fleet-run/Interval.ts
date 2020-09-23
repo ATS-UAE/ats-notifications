@@ -32,7 +32,7 @@ export interface IntervalData {
 	/** details */
 	d: string;
 	/** Days delta */
-	dd: string;
+	dd: string | null;
 	/** Days enabled */
 	de: boolean;
 	/** Days offset */
@@ -50,6 +50,24 @@ export interface IntervalData {
 
 export class Interval {
 	constructor(private api: Api, public data: IntervalData) {}
+
+	get daysFrequency() {
+		const { dd } = this.data;
+		if (dd) {
+			return parseInt(dd.replace("d", ""));
+		}
+		return null;
+	}
+
+	get mileageFrequency() {
+		const { cnmd } = this.data;
+		return cnmd;
+	}
+
+	get engineHoursFrequency() {
+		const { cnehd } = this.data;
+		return cnehd;
+	}
 
 	public static getAll = (api: Api, fleet: number | Fleet) =>
 		api

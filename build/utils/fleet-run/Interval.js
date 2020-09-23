@@ -6,6 +6,33 @@ var Interval = /** @class */ (function () {
         this.api = api;
         this.data = data;
     }
+    Object.defineProperty(Interval.prototype, "daysFrequency", {
+        get: function () {
+            var dd = this.data.dd;
+            if (dd) {
+                return parseInt(dd.replace("d", ""));
+            }
+            return null;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(Interval.prototype, "mileageFrequency", {
+        get: function () {
+            var cnmd = this.data.cnmd;
+            return cnmd;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(Interval.prototype, "engineHoursFrequency", {
+        get: function () {
+            var cnehd = this.data.cnehd;
+            return cnehd;
+        },
+        enumerable: false,
+        configurable: true
+    });
     Interval.getAll = function (api, fleet) {
         return api
             .runApi("/fleets/" + (typeof fleet === "number" ? fleet : fleet.data.id) + "/intervals", "GET")

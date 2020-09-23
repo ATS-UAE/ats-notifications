@@ -41,7 +41,7 @@ var validator = yup
         .required()
         .transform(function (v, ogV) { return (typeof ogV === "string" ? [ogV] : ogV); }),
     subject: yup.string().required(),
-    timezone: yup.string(),
+    timezone: yup.string().required(),
     token: yup.string().required(),
     "fleet-id": yup.number().required(),
     "mail-host": yup.string().required(),

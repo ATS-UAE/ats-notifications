@@ -19,6 +19,8 @@
 		"@types/node": "^13.9.0",
 		"@types/nodemailer": "^6.4.0",
 		"@types/yup": "^0.29.3",
+		"date-fns": "^2.16.1",
+		"date-fns-tz": "^1.0.10",
 		"dotenv": "^8.2.0",
 		"minimist": "^1.2.4",
 		"moment": "^2.24.0",

@@ -1,4 +1,5 @@
-import moment from "moment";
+import { parse } from "date-fns";
+import { utcToZonedTime } from "date-fns-tz";
 import { Api, Fleet } from ".";
 import { LineItem } from "./LineItem";
 
@@ -86,6 +87,10 @@ export class Service {
 		this.serviceStatus = Service.getServiceStatus(data.f);
 	}
 
+	get serviceName() {
+		return this.data.n;
+	}
+
 	get isInProgress() {
 		return this.serviceStatus.includes(ServiceStatus.IN_PROGRESS);
 	}
@@ -116,19 +121,19 @@ export class Service {
 		return this.data.cneh;
 	}
 
-	public getDate(timeZone?: string): moment.Moment | null {
+	public getDate(timezone?: string): Date | null {
 		const date = [this.data.sdt, "YYYY-MM-DD"];
 		const time = [this.data.stm, "HH:mm:ss"];
 
-		const parsedDate = moment(date[0] + time[0], date[1] + time[1]);
-
-		if (timeZone) {
-			return parsedDate.utcOffset(timeZone);
-		}
-		if (!parsedDate.isValid) {
+		try {
+			const parsedDate = parse(date[0] + time[0], date[1] + time[1], new Date());
+			if (timezone) {
+				return utcToZonedTime(parsedDate, timezone);
+			}
+			return parsedDate;
+		} catch (e) {
 			return null;
 		}
-		return parsedDate;
 	}
 
 	public static getAll = (api: Api, fleet: Fleet | number) =>
