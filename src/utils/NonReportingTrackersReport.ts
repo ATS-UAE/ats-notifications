@@ -170,6 +170,8 @@ export class NonReportingTrackersReport {
 		const table = new HtmlTable([
 			"System",
 			"Client",
+			"Subclient",
+			"Subclient2",
 			"IMEI",
 			"Vehicle",
 			"Plate Number",
@@ -181,6 +183,7 @@ export class NonReportingTrackersReport {
 			table.addRow([
 				row.system,
 				row.client,
+				row.subclient,
 				row.subclient2,
 				row.imei,
 				row.vehicle,
@@ -199,6 +202,7 @@ export class NonReportingTrackersReport {
 			"System",
 			"Client",
 			"Subclient",
+			"Subclient2",
 			"IMEI",
 			"Vehicle",
 			"Plate Number",
