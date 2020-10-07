@@ -52,6 +52,16 @@ var JobCard = /** @class */ (function () {
         this.imei = data.imei_no;
         this.systemType =
             data.system_type.toLowerCase() === "securepath" ? "securepath" : "wialon";
+        if (data.sub_client) {
+            this.subclient = {
+                name: data.sub_client
+            };
+            if (data.subclient_2) {
+                this.subclient.subclient = {
+                    name: data.subclient_2
+                };
+            }
+        }
     }
     JobCard.findAll = function (dataBaseOptions, findAllOptions) { return __awaiter(void 0, void 0, void 0, function () {
         var query, connection, jobCards;

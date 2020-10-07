@@ -17,10 +17,12 @@ interface TrackerData {
 	chassis: string;
 	plateNumber: string;
 	imei: string;
-	client: string | null;
+	client: string;
 	daysSinceLastReport: number | null;
 	lastReport: string;
 	system: string;
+	subclient: string;
+	subclient2: string;
 }
 
 interface ResourceCredentials {
@@ -59,6 +61,8 @@ export class NonReportingTrackersReport {
 				acc.push({
 					chassis: jobCard?.chassis || "N/A",
 					client: jobCard?.client || "N/A",
+					subclient: jobCard?.subclient?.name || "N/A",
+					subclient2: jobCard?.subclient?.subclient?.name || "N/A",
 					daysSinceLastReport,
 					imei: tracker.imei,
 					lastReport: (lastReport && formatISO(lastReport)) || "N/A",
@@ -95,6 +99,8 @@ export class NonReportingTrackersReport {
 					chassis: jobCard?.chassis || "N/A",
 					client: jobCard?.client || "N/A",
 					daysSinceLastReport,
+					subclient: jobCard?.subclient?.name || "N/A",
+					subclient2: jobCard?.subclient?.subclient?.name || "N/A",
 					imei: tracker.uid || tracker.nm || "N/A",
 					lastReport: (lastReport && formatISO(lastReport)) || "N/A",
 					plateNumber: jobCard?.plateNo || "N/A",
@@ -191,6 +197,7 @@ export class NonReportingTrackersReport {
 		table.addRow([
 			"System",
 			"Client",
+			"Subclient",
 			"IMEI",
 			"Vehicle",
 			"Plate Number",
@@ -201,7 +208,8 @@ export class NonReportingTrackersReport {
 		this.data.forEach((row) => {
 			table.addRow([
 				row.system,
-				row.client || "N/A",
+				row.client || "",
+				row.subclient || "",
 				row.imei,
 				row.vehicle,
 				row.plateNumber,
