@@ -180,7 +180,8 @@ export class NonReportingTrackersReport {
 		this.data.forEach((row) => {
 			table.addRow([
 				row.system,
-				row.client || "N/A",
+				row.client || "",
+				row.subclient2 || "",
 				row.imei,
 				row.vehicle,
 				row.plateNumber,
@@ -210,6 +211,7 @@ export class NonReportingTrackersReport {
 				row.system,
 				row.client || "",
 				row.subclient || "",
+				row.subclient2 || "",
 				row.imei,
 				row.vehicle,
 				row.plateNumber,

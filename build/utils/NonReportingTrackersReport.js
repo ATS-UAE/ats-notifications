@@ -71,7 +71,8 @@ var NonReportingTrackersReport = /** @class */ (function () {
             _this.data.forEach(function (row) {
                 table.addRow([
                     row.system,
-                    row.client || "N/A",
+                    row.client || "",
+                    row.subclient2 || "",
                     row.imei,
                     row.vehicle,
                     row.plateNumber,
@@ -100,6 +101,7 @@ var NonReportingTrackersReport = /** @class */ (function () {
                     row.system,
                     row.client || "",
                     row.subclient || "",
+                    row.subclient2 || "",
                     row.imei,
                     row.vehicle,
                     row.plateNumber,
