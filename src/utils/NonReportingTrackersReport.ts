@@ -4,7 +4,7 @@ import { Wialon, CoreSearchItemsResponse } from "node-wialon";
 import { SecurePath, LiveTrackerItem } from "securepath-api";
 import { EmailReport } from "./EmailReport";
 import { HtmlTable } from "./HtmlTable";
-import { JobCard } from "./job-card/JobCard";
+import { Client, JobCard } from "./job-card/JobCard";
 import { TextTable } from "./TextTable";
 import { DatabaseConfig, MailConfig } from "../config/types";
 import {
@@ -60,9 +60,9 @@ export class NonReportingTrackersReport {
 				);
 				acc.push({
 					chassis: jobCard?.chassis || "N/A",
-					client: jobCard?.client || "N/A",
-					subclient: jobCard?.subclient?.name || "N/A",
-					subclient2: jobCard?.subclient?.subclient?.name || "N/A",
+					client: jobCard?.client.name || "N/A",
+					subclient: jobCard?.client?.subclient?.name || "N/A",
+					subclient2: jobCard?.client?.subclient?.subclient?.name || "N/A",
 					daysSinceLastReport,
 					imei: tracker.imei,
 					lastReport: (lastReport && formatISO(lastReport)) || "N/A",
@@ -97,10 +97,10 @@ export class NonReportingTrackersReport {
 				}
 				acc.push({
 					chassis: jobCard?.chassis || "N/A",
-					client: jobCard?.client || "N/A",
+					client: jobCard?.client.name || "N/A",
 					daysSinceLastReport,
-					subclient: jobCard?.subclient?.name || "N/A",
-					subclient2: jobCard?.subclient?.subclient?.name || "N/A",
+					subclient: jobCard?.client.subclient?.name || "N/A",
+					subclient2: jobCard?.client?.subclient?.subclient?.name || "N/A",
 					imei: tracker.uid || tracker.nm || "N/A",
 					lastReport: (lastReport && formatISO(lastReport)) || "N/A",
 					plateNumber: jobCard?.plateNo || "N/A",

@@ -61,6 +61,8 @@ var NonReportingTrackersReport = /** @class */ (function () {
             var table = new HtmlTable_1.HtmlTable([
                 "System",
                 "Client",
+                "Subclient",
+                "Subclient2",
                 "IMEI",
                 "Vehicle",
                 "Plate Number",
@@ -72,6 +74,7 @@ var NonReportingTrackersReport = /** @class */ (function () {
                 table.addRow([
                     row.system,
                     row.client,
+                    row.subclient,
                     row.subclient2,
                     row.imei,
                     row.vehicle,
@@ -89,6 +92,7 @@ var NonReportingTrackersReport = /** @class */ (function () {
                 "System",
                 "Client",
                 "Subclient",
+                "Subclient2",
                 "IMEI",
                 "Vehicle",
                 "Plate Number",
@@ -138,7 +142,7 @@ var NonReportingTrackersReport = /** @class */ (function () {
     }
     NonReportingTrackersReport.getNonReportingSecurepath = function (jobCards, trackers, threshold) {
         return trackers.reduce(function (acc, tracker) {
-            var _a, _b, _c;
+            var _a, _b, _c, _d, _e;
             var lastReport = tracker.timestamp && date_fns_1.parse(tracker.timestamp.toString(), "t", new Date());
             var daysSinceLastReport = lastReport
                 ? date_fns_1.differenceInDays(new Date(), lastReport)
@@ -147,9 +151,9 @@ var NonReportingTrackersReport = /** @class */ (function () {
                 var jobCard = jobCards.find(function (jc) { return String(jc.imei) === String(tracker.imei); });
                 acc.push({
                     chassis: (jobCard === null || jobCard === void 0 ? void 0 : jobCard.chassis) || "N/A",
-                    client: (jobCard === null || jobCard === void 0 ? void 0 : jobCard.client) || "N/A",
-                    subclient: ((_a = jobCard === null || jobCard === void 0 ? void 0 : jobCard.subclient) === null || _a === void 0 ? void 0 : _a.name) || "N/A",
-                    subclient2: ((_c = (_b = jobCard === null || jobCard === void 0 ? void 0 : jobCard.subclient) === null || _b === void 0 ? void 0 : _b.subclient) === null || _c === void 0 ? void 0 : _c.name) || "N/A",
+                    client: (jobCard === null || jobCard === void 0 ? void 0 : jobCard.client.name) || "N/A",
+                    subclient: ((_b = (_a = jobCard === null || jobCard === void 0 ? void 0 : jobCard.client) === null || _a === void 0 ? void 0 : _a.subclient) === null || _b === void 0 ? void 0 : _b.name) || "N/A",
+                    subclient2: ((_e = (_d = (_c = jobCard === null || jobCard === void 0 ? void 0 : jobCard.client) === null || _c === void 0 ? void 0 : _c.subclient) === null || _d === void 0 ? void 0 : _d.subclient) === null || _e === void 0 ? void 0 : _e.name) || "N/A",
                     daysSinceLastReport: daysSinceLastReport,
                     imei: tracker.imei,
                     lastReport: (lastReport && date_fns_1.formatISO(lastReport)) || "N/A",
@@ -163,7 +167,7 @@ var NonReportingTrackersReport = /** @class */ (function () {
     };
     NonReportingTrackersReport.getNonReportingWialon = function (jobCards, trackers, threshold) {
         return trackers.items.reduce(function (acc, tracker) {
-            var _a, _b, _c, _d;
+            var _a, _b, _c, _d, _e;
             var lastReport = (((_a = tracker.lmsg) === null || _a === void 0 ? void 0 : _a.t) && date_fns_1.parse(tracker.lmsg.t.toString(), "t", new Date())) ||
                 undefined;
             var daysSinceLastReport = lastReport
@@ -178,10 +182,10 @@ var NonReportingTrackersReport = /** @class */ (function () {
                 }
                 acc.push({
                     chassis: (jobCard === null || jobCard === void 0 ? void 0 : jobCard.chassis) || "N/A",
-                    client: (jobCard === null || jobCard === void 0 ? void 0 : jobCard.client) || "N/A",
+                    client: (jobCard === null || jobCard === void 0 ? void 0 : jobCard.client.name) || "N/A",
                     daysSinceLastReport: daysSinceLastReport,
-                    subclient: ((_b = jobCard === null || jobCard === void 0 ? void 0 : jobCard.subclient) === null || _b === void 0 ? void 0 : _b.name) || "N/A",
-                    subclient2: ((_d = (_c = jobCard === null || jobCard === void 0 ? void 0 : jobCard.subclient) === null || _c === void 0 ? void 0 : _c.subclient) === null || _d === void 0 ? void 0 : _d.name) || "N/A",
+                    subclient: ((_b = jobCard === null || jobCard === void 0 ? void 0 : jobCard.client.subclient) === null || _b === void 0 ? void 0 : _b.name) || "N/A",
+                    subclient2: ((_e = (_d = (_c = jobCard === null || jobCard === void 0 ? void 0 : jobCard.client) === null || _c === void 0 ? void 0 : _c.subclient) === null || _d === void 0 ? void 0 : _d.subclient) === null || _e === void 0 ? void 0 : _e.name) || "N/A",
                     imei: tracker.uid || tracker.nm || "N/A",
                     lastReport: (lastReport && date_fns_1.formatISO(lastReport)) || "N/A",
                     plateNumber: (jobCard === null || jobCard === void 0 ? void 0 : jobCard.plateNo) || "N/A",

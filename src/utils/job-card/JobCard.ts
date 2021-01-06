@@ -24,26 +24,27 @@ interface DataBaseConnectionOptions {
 	database: string;
 }
 
-export interface Subclient {
+export interface Client {
 	name: string;
-	subclient?: Subclient;
+	subclient?: Client;
 }
 
 export class JobCard {
 	public id: number;
 	public chassis: string;
-	public client: string;
+	public client: Client;
 	public plateNo: string;
 	public vehicle: string;
 	public active: boolean;
 	public imei: string;
 	public systemType: "securepath" | "wialon";
-	public subclient?: Subclient;
 
 	constructor(data: JobCardTableFields) {
 		this.id = data.id;
 		this.chassis = data.chassis_no;
-		this.client = data.client_name;
+		this.client = {
+			name: data.client_name
+		};
 		this.plateNo = data.plate_no;
 		this.vehicle = data.vehicle;
 		this.active = data.active === "yes";
@@ -51,11 +52,11 @@ export class JobCard {
 		this.systemType =
 			data.system_type.toLowerCase() === "securepath" ? "securepath" : "wialon";
 		if (data.sub_client) {
-			this.subclient = {
+			this.client.subclient = {
 				name: data.sub_client
 			};
 			if (data.subclient_2) {
-				this.subclient.subclient = {
+				this.client.subclient.subclient = {
 					name: data.subclient_2
 				};
 			}

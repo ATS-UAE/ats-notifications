@@ -45,7 +45,9 @@ var JobCard = /** @class */ (function () {
     function JobCard(data) {
         this.id = data.id;
         this.chassis = data.chassis_no;
-        this.client = data.client_name;
+        this.client = {
+            name: data.client_name
+        };
         this.plateNo = data.plate_no;
         this.vehicle = data.vehicle;
         this.active = data.active === "yes";
@@ -53,11 +55,11 @@ var JobCard = /** @class */ (function () {
         this.systemType =
             data.system_type.toLowerCase() === "securepath" ? "securepath" : "wialon";
         if (data.sub_client) {
-            this.subclient = {
+            this.client.subclient = {
                 name: data.sub_client
             };
             if (data.subclient_2) {
-                this.subclient.subclient = {
+                this.client.subclient.subclient = {
                     name: data.subclient_2
                 };
             }
