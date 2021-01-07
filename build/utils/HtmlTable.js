@@ -5,9 +5,9 @@ var HtmlTable = /** @class */ (function () {
     function HtmlTable(columns) {
         var _this = this;
         this.columns = columns;
-        this.rows = [];
+        this.table = [];
         this.addRow = function (values) {
-            _this.rows.push(values);
+            _this.table.push(values);
         };
         this.renderHeaderRowHtml = function () {
             var headersHtml = "<tr>" +
@@ -18,7 +18,7 @@ var HtmlTable = /** @class */ (function () {
             return headersHtml;
         };
         this.renderRowsHtml = function () {
-            var rowsHtml = _this.rows
+            var rowsHtml = _this.table
                 .map(function (r) {
                 return "<tr>" + r
                     .map(function (r) { return "<td style=\"" + _this.getRowStyle() + "\">" + r + "</td>"; })

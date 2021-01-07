@@ -10,6 +10,26 @@ var TextTable = /** @class */ (function () {
         this.addRow = function (row) {
             _this.table.push(row);
         };
+        this.renderMarkdownRow = function (row) {
+            return "| " + row
+                .map(function (cell) { return String(cell).replace("|", "-"); })
+                .join(" | ") + " |\n";
+        };
+        this.renderMarkdownHeaderSeparator = function (columns) {
+            return "| " + new Array(columns).join("--- | ---") + " |\n";
+        };
+        this.getMarkdown = function () {
+            return _this.table.reduce(function (acc, row, index) {
+                if (index === 0) {
+                    acc += _this.renderMarkdownRow(row);
+                    acc += _this.renderMarkdownHeaderSeparator(row.length);
+                }
+                else {
+                    acc += _this.renderMarkdownRow(row);
+                }
+                return acc;
+            }, "");
+        };
         /** @returns A table with rows separated in \n and columns
          * separated in \t.
          */

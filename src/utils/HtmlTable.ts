@@ -1,11 +1,11 @@
 import { IRenderable } from "./Renderable";
 
 export class HtmlTable implements IRenderable {
-	public rows: (string | number)[][] = [];
-	constructor(public columns: string[]) {}
+	public table: (string | number)[][] = [];
+	constructor(public columns: Array<string | number>) {}
 
 	public addRow = (values: Array<string | number>) => {
-		this.rows.push(values);
+		this.table.push(values);
 	};
 
 	private renderHeaderRowHtml = () => {
@@ -19,7 +19,7 @@ export class HtmlTable implements IRenderable {
 	};
 
 	private renderRowsHtml = () => {
-		const rowsHtml = this.rows
+		const rowsHtml = this.table
 			.map(
 				(r) =>
 					`<tr>${r

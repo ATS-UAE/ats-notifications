@@ -4,6 +4,7 @@ import { MailConfig } from "../config/types";
 
 export interface MailSendOptions {
 	to: string[];
+	cc?: string[];
 	subject: string;
 	body: string;
 	nickname: string;
@@ -11,9 +12,8 @@ export interface MailSendOptions {
 
 export class Mailer {
 	private mailer: Mail;
-	private static instance: Mailer;
 
-	constructor(config: MailConfig) {
+	constructor(private config: MailConfig) {
 		this.mailer = nodemailer.createTransport({
 			auth: {
 				user: config.user,
@@ -29,10 +29,11 @@ export class Mailer {
 		return new Promise((resolve, reject) => {
 			this.mailer.sendMail(
 				{
-					from: `${options.nickname} <no-reply@atsuae.net>`,
+					from: `${options.nickname} <${this.config.user}>`,
 					to: options.to,
 					subject: options.subject,
-					html: options.body
+					html: options.body,
+					cc: options.cc
 				},
 				(err, info) => {
 					if (err) {

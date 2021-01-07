@@ -50,19 +50,22 @@ NonReportingTrackersReport_1.NonReportingTrackersReport.create({
     mail: non_reporting_trackers_report_1.mail || undefined
 }, {
     threshold: non_reporting_trackers_report_1.options.threshold
-}, non_reporting_trackers_report_1.args.timezone)
+}, {
+    columns: non_reporting_trackers_report_1.options.columns,
+    clients: non_reporting_trackers_report_1.options.clients
+})
     .then(function (serviceReport) { return __awaiter(void 0, void 0, void 0, function () {
     var sent, table;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
                 if (!(serviceReport.data.length > 0)) return [3 /*break*/, 3];
-                if (!(non_reporting_trackers_report_1.mail && non_reporting_trackers_report_1.options.recipient && non_reporting_trackers_report_1.options.subject)) return [3 /*break*/, 2];
+                if (!(non_reporting_trackers_report_1.mail && non_reporting_trackers_report_1.options.recipients)) return [3 /*break*/, 2];
                 return [4 /*yield*/, serviceReport.sendReportByEmail({
                         mailConfig: non_reporting_trackers_report_1.mail,
-                        subject: non_reporting_trackers_report_1.options.subject,
-                        recipients: non_reporting_trackers_report_1.options.recipient,
-                        threshold: non_reporting_trackers_report_1.options.threshold
+                        recipients: non_reporting_trackers_report_1.options.recipients,
+                        threshold: non_reporting_trackers_report_1.options.threshold,
+                        cc: non_reporting_trackers_report_1.options.cc
                     })];
             case 1:
                 sent = _a.sent();

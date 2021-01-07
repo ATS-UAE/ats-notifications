@@ -24,17 +24,20 @@ NonReportingTrackersReport.create(
 	{
 		threshold: options.threshold
 	},
-	args.timezone
+	{
+		columns: options.columns,
+		clients: options.clients
+	}
 )
 	.then(async (serviceReport) => {
 		// Send only if the service report has any pending services.
 		if (serviceReport.data.length > 0) {
-			if (mail && options.recipient && options.subject) {
+			if (mail && options.recipients) {
 				const sent = await serviceReport.sendReportByEmail({
 					mailConfig: mail,
-					subject: options.subject,
-					recipients: options.recipient,
-					threshold: options.threshold
+					recipients: options.recipients,
+					threshold: options.threshold,
+					cc: options.cc
 				});
 				console.log(sent);
 			} else {

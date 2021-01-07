@@ -3,25 +3,31 @@ import * as yup from "yup";
 import { MailConfig, DatabaseConfig } from "./types";
 
 export interface FleetRunOverdueEmailReportCommandLineArgs {
-	h: boolean;
-	help: boolean;
-	recipient: string[];
-	subject: string;
+	h?: boolean;
+	help?: boolean;
+	/** Comma separated emails. */
+	recipients?: string;
+	/** Comma separated emails. */
+	cc?: string;
 	// eg. "+04:00"
-	timezone: string;
-	"db-name": string;
-	"db-user": string;
-	"db-pass": string;
-	"db-host": string;
-	"sp-user": string;
-	"sp-password": string;
-	"wialon-token": string;
+	timezone?: string;
+	"db-name"?: string;
+	"db-user"?: string;
+	"db-pass"?: string;
+	"db-host"?: string;
+	"sp-user"?: string;
+	"sp-password"?: string;
+	"wialon-token"?: string;
 	/** Non reporting days before it is included in the report */
-	threshold: string;
-	"mail-host": string;
-	"mail-user": string;
-	"mail-pass": string;
-	"mail-port": string;
+	threshold?: string;
+	"mail-host"?: string;
+	"mail-user"?: string;
+	"mail-pass"?: string;
+	"mail-port"?: string;
+	/** Comma separated clients to pick from. */
+	clients?: string;
+	/** comma separated column numbers starting from 1 */
+	columns?: string;
 }
 
 export interface SecurePathConfig {
@@ -38,10 +44,12 @@ const validator = yup
 	.shape({
 		h: yup.boolean().default(false),
 		help: yup.boolean().default(false),
-		recipient: yup
+		recipients: yup
 			.array(yup.string().required())
-			.transform((v, ogV) => (typeof ogV === "string" ? [ogV] : ogV)),
-		subject: yup.string(),
+			.notRequired()
+			.transform((v, ogV) => {
+				return ogV.split(",");
+			}),
 		timezone: yup.string(),
 		"db-name": yup.string().required(),
 		"db-user": yup.string().required(),
@@ -54,7 +62,25 @@ const validator = yup
 		"mail-host": yup.string(),
 		"mail-user": yup.string(),
 		"mail-pass": yup.string(),
-		"mail-port": yup.number()
+		"mail-port": yup.number(),
+		columns: yup
+			.array(yup.number().required())
+			.notRequired()
+			.transform((v, ogV) => {
+				return ogV.split(",").map((string: string) => parseInt(string));
+			}),
+		cc: yup
+			.array(yup.string().required())
+			.notRequired()
+			.transform((v, ogV) => {
+				return ogV.split(",");
+			}),
+		clients: yup
+			.array(yup.string().required())
+			.notRequired()
+			.transform((v, ogV) => {
+				return ogV.split(",");
+			})
 	})
 	.required();
 
@@ -69,7 +95,6 @@ export const args = validator.cast(parsedArgs);
 export let mail: MailConfig | null = null;
 
 if (
-	args["db-pass"] &&
 	args["mail-host"] &&
 	args["mail-pass"] &&
 	args["mail-port"] &&
@@ -102,6 +127,8 @@ export const wialon: WialonConfig = {
 export const options = {
 	threshold: args.threshold,
 	timezone: args.timezone,
-	recipient: args.recipient,
-	subject: args.subject
+	recipients: args.recipients,
+	columns: args.columns,
+	cc: args.cc,
+	clients: args.clients
 };

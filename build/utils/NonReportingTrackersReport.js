@@ -45,20 +45,21 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.NonReportingTrackersReport = void 0;
 var date_fns_1 = require("date-fns");
-var date_fns_tz_1 = require("date-fns-tz");
 var node_wialon_1 = require("node-wialon");
 var securepath_api_1 = require("securepath-api");
-var EmailReport_1 = require("./EmailReport");
 var HtmlTable_1 = require("./HtmlTable");
 var JobCard_1 = require("./job-card/JobCard");
 var TextTable_1 = require("./TextTable");
+var MarkdownToHtml_1 = require("./MarkdownToHtml");
+var Mailer_1 = require("./Mailer");
+var DateUtils_1 = require("./DateUtils");
+var NOT_AVAILABLE_STRING = "N/A";
 var NonReportingTrackersReport = /** @class */ (function () {
-    function NonReportingTrackersReport(data, timezone) {
+    function NonReportingTrackersReport(data, options) {
         var _this = this;
-        this.data = data;
-        this.timezone = timezone;
+        this.options = options;
         this.getHtmlTable = function () {
-            var table = new HtmlTable_1.HtmlTable([
+            var table = new HtmlTable_1.HtmlTable(_this.getColumnsFromArray([
                 "System",
                 "Client",
                 "Subclient",
@@ -69,26 +70,17 @@ var NonReportingTrackersReport = /** @class */ (function () {
                 "Chassis",
                 "Days Since Last Report",
                 "Last Report Date"
-            ]);
-            _this.data.forEach(function (row) {
-                table.addRow([
-                    row.system,
-                    row.client,
-                    row.subclient,
-                    row.subclient2,
-                    row.imei,
-                    row.vehicle,
-                    row.plateNumber,
-                    row.chassis,
-                    row.daysSinceLastReport || "N/A",
-                    row.lastReport
-                ]);
+            ]));
+            _this.data.forEach(function (trackerData) {
+                if (_this.shouldIncludeClient(trackerData)) {
+                    table.addRow(_this.getColumns(trackerData));
+                }
             });
             return table;
         };
         this.getTextTable = function () {
             var table = new TextTable_1.TextTable();
-            table.addRow([
+            table.addRow(_this.getColumnsFromArray([
                 "System",
                 "Client",
                 "Subclient",
@@ -99,47 +91,103 @@ var NonReportingTrackersReport = /** @class */ (function () {
                 "Chassis",
                 "Days Since Last Report",
                 "Last Report Date"
-            ]);
-            _this.data.forEach(function (row) {
-                table.addRow([
-                    row.system,
-                    row.client,
-                    row.subclient,
-                    row.subclient2,
-                    row.imei,
-                    row.vehicle,
-                    row.plateNumber,
-                    row.chassis,
-                    row.daysSinceLastReport || "N/A",
-                    row.lastReport
-                ]);
+            ]));
+            _this.data.forEach(function (trackerData) {
+                if (_this.shouldIncludeClient(trackerData)) {
+                    table.addRow(_this.getColumns(trackerData));
+                }
             });
             return table;
+        };
+        this.shouldIncludeClient = function (trackerData) {
+            if (_this.options.clients) {
+                return _this.options.clients.some(function (client) {
+                    return _this.searchClientKeyword(client, trackerData);
+                });
+            }
+            return true;
+        };
+        this.searchClientKeyword = function (client, trackerData) {
+            var keywords = [trackerData.client.toLowerCase()];
+            if (trackerData.subclient) {
+                keywords.push(trackerData.subclient.toLowerCase());
+            }
+            if (trackerData.subclient2) {
+                keywords.push(trackerData.subclient2.toLowerCase());
+            }
+            return keywords.some(function (keyword) {
+                var compareString = client.toLowerCase();
+                return keyword.includes(compareString);
+            });
+        };
+        this.getColumnsFromArray = function (row) {
+            var filteredRow = [];
+            if (_this.options.columns) {
+                var validColumns_1 = _this.options.columns;
+                row.filter(function (row, index) {
+                    if (validColumns_1.includes(index + 1)) {
+                        filteredRow.push(row);
+                    }
+                });
+                return filteredRow;
+            }
+            return row;
+        };
+        this.getColumns = function (trackerData) {
+            return _this.getColumnsFromArray([
+                trackerData.system,
+                trackerData.client,
+                trackerData.subclient || NOT_AVAILABLE_STRING,
+                trackerData.subclient2 || NOT_AVAILABLE_STRING,
+                trackerData.imei,
+                trackerData.vehicle,
+                trackerData.plateNumber,
+                trackerData.chassis,
+                trackerData.daysSinceLastReport || NOT_AVAILABLE_STRING,
+                trackerData.lastReport
+            ]);
         };
         this.printTextTable = function () {
             var table = _this.getTextTable();
             return table.render();
         };
         this.sendReportByEmail = function (_a) {
-            var mailConfig = _a.mailConfig, recipients = _a.recipients, subject = _a.subject, threshold = _a.threshold;
-            var emailReport = new EmailReport_1.EmailReport(mailConfig);
-            var currentDate = new Date();
-            emailReport.appendBody("<h1>Non Reporting Tracker List.</h1>");
-            emailReport.appendBody("<p>Vehicles not reporting for more than " + threshold + " days.</p>");
-            emailReport.appendBody(_this.getHtmlTable());
-            if (_this.timezone) {
-                emailReport.appendBody("<p>Sent " + date_fns_1.formatISO(date_fns_tz_1.utcToZonedTime(currentDate, _this.timezone)) + "</p>");
-            }
-            else {
-                emailReport.appendBody("<p>Sent " + date_fns_1.formatISO(currentDate) + "</p>");
-            }
-            return emailReport.send({
+            var mailConfig = _a.mailConfig, recipients = _a.recipients, threshold = _a.threshold, cc = _a.cc;
+            var htmlReport = new MarkdownToHtml_1.MarkdownToHtml("\nDear Team,\n\t\t\nPlease find the table below for the updated list of\u00A0non-reporting\u00A0vehicles for more than " + threshold + " days.\n\nTo protect your assets and ensure that our GPS devices are working properly, our team will be having an inspection on each of your vehicles as listed in the following table.\n\nKindly arrange the vehicles for device physical checking and please provide the person/s involved, locations, and contact numbers.\n\t\t\nYour immediate response will be appreciated so we can arrange our team ahead of time and also to prioritize your desired date of inspection\t,\n\n" + _this.getTextTable().getMarkdown() + "\n\nRegards,").getHtml();
+            var mailer = new Mailer_1.Mailer(mailConfig);
+            return mailer.sendMail({
+                body: htmlReport,
+                nickname: "ATS Support",
+                subject: "Non Reporting Vehicles " + DateUtils_1.DateUtils.getDateString(),
                 to: recipients,
-                subject: subject,
-                nickname: "ATS Notifications"
+                cc: cc
             });
         };
+        this.data = NonReportingTrackersReport.sortByLastReportingDate(data);
     }
+    NonReportingTrackersReport.sortByLastReportingDate = function (data) {
+        return data.sort(function (a, b) {
+            // Wialon first
+            if (a.system < b.system) {
+                return 1;
+            }
+            else if (a.system > b.system) {
+                return -1;
+            }
+            else {
+                // Sort descending numeric
+                var lastReportA = a.daysSinceLastReport || 0;
+                var lastReportB = b.daysSinceLastReport || 0;
+                if (lastReportA < lastReportB) {
+                    return 1;
+                }
+                else if (lastReportA > lastReportB) {
+                    return -1;
+                }
+                return 0;
+            }
+        });
+    };
     NonReportingTrackersReport.getNonReportingSecurepath = function (jobCards, trackers, threshold) {
         return trackers.reduce(function (acc, tracker) {
             var _a, _b, _c, _d, _e;
@@ -150,15 +198,15 @@ var NonReportingTrackersReport = /** @class */ (function () {
             if (daysSinceLastReport === null || daysSinceLastReport >= threshold) {
                 var jobCard = jobCards.find(function (jc) { return String(jc.imei) === String(tracker.imei); });
                 acc.push({
-                    chassis: (jobCard === null || jobCard === void 0 ? void 0 : jobCard.chassis) || "N/A",
-                    client: (jobCard === null || jobCard === void 0 ? void 0 : jobCard.client.name) || "N/A",
-                    subclient: ((_b = (_a = jobCard === null || jobCard === void 0 ? void 0 : jobCard.client) === null || _a === void 0 ? void 0 : _a.subclient) === null || _b === void 0 ? void 0 : _b.name) || "N/A",
-                    subclient2: ((_e = (_d = (_c = jobCard === null || jobCard === void 0 ? void 0 : jobCard.client) === null || _c === void 0 ? void 0 : _c.subclient) === null || _d === void 0 ? void 0 : _d.subclient) === null || _e === void 0 ? void 0 : _e.name) || "N/A",
+                    chassis: (jobCard === null || jobCard === void 0 ? void 0 : jobCard.chassis) || NOT_AVAILABLE_STRING,
+                    client: (jobCard === null || jobCard === void 0 ? void 0 : jobCard.client.name) || NOT_AVAILABLE_STRING,
+                    subclient: (_b = (_a = jobCard === null || jobCard === void 0 ? void 0 : jobCard.client) === null || _a === void 0 ? void 0 : _a.subclient) === null || _b === void 0 ? void 0 : _b.name,
+                    subclient2: (_e = (_d = (_c = jobCard === null || jobCard === void 0 ? void 0 : jobCard.client) === null || _c === void 0 ? void 0 : _c.subclient) === null || _d === void 0 ? void 0 : _d.subclient) === null || _e === void 0 ? void 0 : _e.name,
                     daysSinceLastReport: daysSinceLastReport,
                     imei: tracker.imei,
-                    lastReport: (lastReport && date_fns_1.formatISO(lastReport)) || "N/A",
-                    plateNumber: (jobCard === null || jobCard === void 0 ? void 0 : jobCard.plateNo) || "N/A",
-                    vehicle: (jobCard === null || jobCard === void 0 ? void 0 : jobCard.vehicle) || "N/A",
+                    lastReport: (lastReport && date_fns_1.formatISO(lastReport)) || NOT_AVAILABLE_STRING,
+                    plateNumber: (jobCard === null || jobCard === void 0 ? void 0 : jobCard.plateNo) || NOT_AVAILABLE_STRING,
+                    vehicle: (jobCard === null || jobCard === void 0 ? void 0 : jobCard.vehicle) || NOT_AVAILABLE_STRING,
                     system: "SecurePath"
                 });
             }
@@ -181,15 +229,15 @@ var NonReportingTrackersReport = /** @class */ (function () {
                     console.error(tracker.nm + " has no IMEI");
                 }
                 acc.push({
-                    chassis: (jobCard === null || jobCard === void 0 ? void 0 : jobCard.chassis) || "N/A",
-                    client: (jobCard === null || jobCard === void 0 ? void 0 : jobCard.client.name) || "N/A",
+                    chassis: (jobCard === null || jobCard === void 0 ? void 0 : jobCard.chassis) || NOT_AVAILABLE_STRING,
+                    client: (jobCard === null || jobCard === void 0 ? void 0 : jobCard.client.name) || NOT_AVAILABLE_STRING,
                     daysSinceLastReport: daysSinceLastReport,
-                    subclient: ((_b = jobCard === null || jobCard === void 0 ? void 0 : jobCard.client.subclient) === null || _b === void 0 ? void 0 : _b.name) || "N/A",
-                    subclient2: ((_e = (_d = (_c = jobCard === null || jobCard === void 0 ? void 0 : jobCard.client) === null || _c === void 0 ? void 0 : _c.subclient) === null || _d === void 0 ? void 0 : _d.subclient) === null || _e === void 0 ? void 0 : _e.name) || "N/A",
-                    imei: tracker.uid || tracker.nm || "N/A",
-                    lastReport: (lastReport && date_fns_1.formatISO(lastReport)) || "N/A",
-                    plateNumber: (jobCard === null || jobCard === void 0 ? void 0 : jobCard.plateNo) || "N/A",
-                    vehicle: (jobCard === null || jobCard === void 0 ? void 0 : jobCard.vehicle) || "N/A",
+                    subclient: ((_b = jobCard === null || jobCard === void 0 ? void 0 : jobCard.client.subclient) === null || _b === void 0 ? void 0 : _b.name) || NOT_AVAILABLE_STRING,
+                    subclient2: ((_e = (_d = (_c = jobCard === null || jobCard === void 0 ? void 0 : jobCard.client) === null || _c === void 0 ? void 0 : _c.subclient) === null || _d === void 0 ? void 0 : _d.subclient) === null || _e === void 0 ? void 0 : _e.name) || NOT_AVAILABLE_STRING,
+                    imei: tracker.uid || tracker.nm || NOT_AVAILABLE_STRING,
+                    lastReport: (lastReport && date_fns_1.formatISO(lastReport)) || NOT_AVAILABLE_STRING,
+                    plateNumber: (jobCard === null || jobCard === void 0 ? void 0 : jobCard.plateNo) || NOT_AVAILABLE_STRING,
+                    vehicle: (jobCard === null || jobCard === void 0 ? void 0 : jobCard.vehicle) || NOT_AVAILABLE_STRING,
                     system: "Wialon"
                 });
             }
@@ -229,14 +277,14 @@ var NonReportingTrackersReport = /** @class */ (function () {
             }
         });
     }); };
-    NonReportingTrackersReport.create = function (credentials, options, timezone) { return __awaiter(void 0, void 0, void 0, function () {
+    NonReportingTrackersReport.create = function (credentials, options, tableOptions) { return __awaiter(void 0, void 0, void 0, function () {
         var reportData;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0: return [4 /*yield*/, NonReportingTrackersReport.fetchReportData(credentials, options)];
                 case 1:
                     reportData = _a.sent();
-                    return [2 /*return*/, new NonReportingTrackersReport(reportData, timezone)];
+                    return [2 /*return*/, new NonReportingTrackersReport(reportData, tableOptions)];
             }
         });
     }); };

@@ -8,13 +8,15 @@ var nodemailer_1 = __importDefault(require("nodemailer"));
 var Mailer = /** @class */ (function () {
     function Mailer(config) {
         var _this = this;
+        this.config = config;
         this.sendMail = function (options) {
             return new Promise(function (resolve, reject) {
                 _this.mailer.sendMail({
-                    from: options.nickname + " <no-reply@atsuae.net>",
+                    from: options.nickname + " <" + _this.config.user + ">",
                     to: options.to,
                     subject: options.subject,
-                    html: options.body
+                    html: options.body,
+                    cc: options.cc
                 }, function (err, info) {
                     if (err) {
                         reject(err);

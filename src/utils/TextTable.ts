@@ -9,6 +9,28 @@ export class TextTable implements IRenderable {
 		this.table.push(row);
 	};
 
+	private renderMarkdownRow = (row: Array<string | number>) => {
+		return `| ${row
+			.map((cell) => String(cell).replace("|", "-"))
+			.join(" | ")} |\n`;
+	};
+
+	private renderMarkdownHeaderSeparator = (columns: number) => {
+		return `| ${new Array(columns).join("--- | ---")} |\n`;
+	};
+
+	public getMarkdown = () => {
+		return this.table.reduce<string>((acc, row, index) => {
+			if (index === 0) {
+				acc += this.renderMarkdownRow(row);
+				acc += this.renderMarkdownHeaderSeparator(row.length);
+			} else {
+				acc += this.renderMarkdownRow(row);
+			}
+			return acc;
+		}, "");
+	};
+
 	/** @returns A table with rows separated in \n and columns
 	 * separated in \t.
 	 */
