@@ -1,38 +1,23 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Unit = void 0;
-var Unit = /** @class */ (function () {
-    function Unit(api, data) {
+class Unit {
+    constructor(api, data) {
         this.api = api;
         this.data = data;
     }
-    Object.defineProperty(Unit.prototype, "mileage", {
-        get: function () {
-            return this.data.cnm;
-        },
-        enumerable: false,
-        configurable: true
-    });
-    Object.defineProperty(Unit.prototype, "engineHours", {
-        get: function () {
-            return this.data.cneh;
-        },
-        enumerable: false,
-        configurable: true
-    });
-    Object.defineProperty(Unit.prototype, "unitName", {
-        get: function () {
-            return this.data.n;
-        },
-        enumerable: false,
-        configurable: true
-    });
-    Unit.getAll = function (api, fleet) {
-        return api
-            .runApi("/fleets/" + (typeof fleet === "number" ? fleet : fleet.data.id) + "/units", "GET")
-            .then(function (res) { return res.units.map(function (unit) { return new Unit(api, unit); }); });
-    };
-    return Unit;
-}());
+    get mileage() {
+        return this.data.cnm;
+    }
+    get engineHours() {
+        return this.data.cneh;
+    }
+    get unitName() {
+        return this.data.n;
+    }
+}
 exports.Unit = Unit;
+Unit.getAll = (api, fleet) => api
+    .runApi(`/fleets/${typeof fleet === "number" ? fleet : fleet.data.id}/units`, "GET")
+    .then((res) => res.units.map((unit) => new Unit(api, unit)));
 //# sourceMappingURL=Unit.js.map

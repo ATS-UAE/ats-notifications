@@ -1,47 +1,48 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.HtmlTable = void 0;
-var HtmlTable = /** @class */ (function () {
-    function HtmlTable(columns) {
-        var _this = this;
+class HtmlTable {
+    constructor(columns) {
         this.columns = columns;
         this.table = [];
-        this.addRow = function (values) {
-            _this.table.push(values);
+        this.addRow = (values) => {
+            this.table.push(values);
         };
-        this.renderHeaderRowHtml = function () {
-            var headersHtml = "<tr>" +
-                _this.columns
-                    .map(function (c) { return "<th style=\"" + _this.getRowStyle() + "\">" + c + "</th>"; })
+        this.renderHeaderRowHtml = () => {
+            const headersHtml = "<tr>" +
+                this.columns
+                    .map((c) => `<th style="${this.getRowStyle()}">${c}</th>`)
                     .join("") +
                 "</tr>";
             return headersHtml;
         };
-        this.renderRowsHtml = function () {
-            var rowsHtml = _this.table
-                .map(function (r) {
-                return "<tr>" + r
-                    .map(function (r) { return "<td style=\"" + _this.getRowStyle() + "\">" + r + "</td>"; })
-                    .join("") + "</tr>";
-            })
+        this.renderRowsHtml = () => {
+            const rowsHtml = this.table
+                .map((r) => `<tr>${r
+                .map((r) => `<td style="${this.getRowStyle()}">${r}</td>`)
+                .join("")}</tr>`)
                 .join("");
             return rowsHtml;
         };
-        this.getRowStyle = function () {
-            return "\n\t\t\tborder: 1px solid black;\n\t\t\tpadding: 5px 10px 5px 10px;\n\t\t";
+        this.getRowStyle = () => {
+            return `
+			border: 1px solid black;
+			padding: 5px 10px 5px 10px;
+		`;
         };
-        this.getTableStyle = function () {
-            return "\n\t\t\tborder: 1px solid black;\n\t\t";
+        this.getTableStyle = () => {
+            return `
+			border: 1px solid black;
+		`;
         };
-        this.render = function () {
-            var html = "<table style=\"" + _this.getTableStyle() + "\">" +
-                _this.renderHeaderRowHtml() +
-                _this.renderRowsHtml() +
+        this.render = () => {
+            const html = `<table style="${this.getTableStyle()}">` +
+                this.renderHeaderRowHtml() +
+                this.renderRowsHtml() +
                 "</table>";
             return html;
         };
     }
-    return HtmlTable;
-}());
+}
 exports.HtmlTable = HtmlTable;
 //# sourceMappingURL=HtmlTable.js.map

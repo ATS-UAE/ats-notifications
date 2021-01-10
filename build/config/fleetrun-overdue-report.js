@@ -23,15 +23,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.options = exports.mail = exports.args = exports.ReportColumn = void 0;
-var minimist_1 = __importDefault(require("minimist"));
-var yup = __importStar(require("yup"));
+const minimist_1 = __importDefault(require("minimist"));
+const yup = __importStar(require("yup"));
 var ReportColumn;
 (function (ReportColumn) {
     ReportColumn["OVERDUE_DAY"] = "d";
     ReportColumn["OVERDUE_ENGINE_HOURS"] = "eh";
     ReportColumn["OVERDUE_MILEAGE"] = "m";
 })(ReportColumn = exports.ReportColumn || (exports.ReportColumn = {}));
-var validator = yup
+const validator = yup
     .object()
     .shape({
     h: yup.boolean().required().default(false),
@@ -39,7 +39,7 @@ var validator = yup
     recipient: yup
         .array(yup.string().required())
         .required()
-        .transform(function (v, ogV) { return (typeof ogV === "string" ? [ogV] : ogV); }),
+        .transform((v, ogV) => (typeof ogV === "string" ? [ogV] : ogV)),
     subject: yup.string().required(),
     timezone: yup.string().required(),
     token: yup.string().required(),
@@ -51,11 +51,11 @@ var validator = yup
     cols: yup
         .array(yup.string().oneOf(Object.values(ReportColumn)).required())
         .required()
-        .transform(function (v, ogV) { return (typeof ogV === "string" ? ogV.split(",") : ogV); })
+        .transform((v, ogV) => (typeof ogV === "string" ? ogV.split(",") : ogV))
         .default(Object.values(ReportColumn))
 })
     .required();
-var parsedArgs = minimist_1.default(process.argv);
+const parsedArgs = minimist_1.default(process.argv);
 validator.validateSync(parsedArgs);
 exports.args = validator.cast(parsedArgs);
 exports.mail = {
