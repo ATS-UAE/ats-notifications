@@ -11,7 +11,7 @@ class TextTable {
         };
         this.renderMarkdownRow = (row) => {
             return `| ${row
-                .map((cell) => String(cell).replaceAll("|", "-"))
+                .map((cell) => String(cell).split("|").join("-"))
                 .join(" | ")} |\n`;
         };
         this.renderMarkdownHeaderSeparator = (columns) => {

@@ -11,7 +11,7 @@ export class TextTable implements IRenderable {
 
 	private renderMarkdownRow = (row: Array<string | number>) => {
 		return `| ${row
-			.map((cell) => String(cell).replaceAll("|", "-"))
+			.map((cell) => String(cell).split("|").join("-"))
 			.join(" | ")} |\n`;
 	};
 
